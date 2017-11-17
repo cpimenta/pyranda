@@ -86,17 +86,18 @@ class pyrandaVar:
         
 class pyrandaEq:
 
-    def __init__(self,eqstr):
+    def __init__(self,eqstr,sMap):
         """
         Read in eqstr and extract the LHS variable 
         and the kind of equation (PDE or ALG)
         """
         self.eqstr = eqstr
         self.kind = 'ALG'
-        self.LHS = findVar(eqstr.split('=')[0],':')[0]
-
+        self.LHS = findVar(eqstr.split('=')[0],':')
+        self.rank = len(self.LHS)
+        
         # Make a lambda for this equation
-        Srhs = fortran3d( self.eqstr.split('=')[1] )
+        Srhs = fortran3d( self.eqstr.split('=')[1] , sMap)
         self.RHS = eval( 'lambda self: ' + Srhs )
 
         
@@ -251,11 +252,22 @@ class pyrandaSim:
         self.nPDE = 0
         self.nALG = 0
 
+        # Package info
+        self.packages = {}
+
+        # Compute sMap
+        self.get_sMap()
+
     def iprint(self,sprnt):
         if self.PyMPI.master:
             print(sprnt)
         
-
+    def addPackage(self,package):
+        
+        self.packages[package.name] = package
+        package.get_sMap()
+        self.sMap.update( package.sMap )
+            
     def allocate(self):
         """
         Loop over vars and allocate the data
@@ -270,11 +282,14 @@ class pyrandaSim:
 
     def addEqu(self,equation):
 
-        peq = pyrandaEq(equation) 
+        peq = pyrandaEq(equation,self.sMap) 
         self.equations.append( peq )
         if peq.kind == 'PDE':
             self.nPDE += 1
-            self.conserved.append( peq.LHS )
+            self.conserved.append( peq.LHS[0] )
+            if len( peq.LHS ) > 1:
+                print 'Warning... only single return values for PDEs allowed'
+                exit()
         elif peq.kind == 'ALG':
             self.nALG += 1
         else:
@@ -336,12 +351,12 @@ class pyrandaSim:
         for eqo in self.equations:
             eq = eqo.eqstr
             if ( eqo.kind == 'PDE' ):
-                lhs = eqo.LHS
+                lhs = eqo.LHS[0]
                 Srhs = eq.split('=')[1]  # This is a string to evaluate
                 if USE_LAMBDA:
-                    flux[eqo.LHS] = eqo.RHS(self)
+                    flux[lhs] = eqo.RHS(self)
                 else:
-                    rhs = eval( fortran3d(Srhs) )  # This is where the work is done
+                    rhs = eval( fortran3d(Srhs,self.sMap) )  # This is where the work is done
                     flux[lhs] = rhs
 
         return flux
@@ -353,9 +368,14 @@ class pyrandaSim:
         for eq in self.equations:
             if ( eq.kind == 'ALG'):
                 if USE_LAMBDA:
-                    self.variables[eq.LHS].data = eq.RHS(self)
+                    rhs = eq.RHS(self)
+                    if eq.rank == 1:
+                        self.variables[eq.LHS[0]].data = rhs
+                    else:
+                        for ii in range(len(rhs)):
+                            self.variables[eq.LHS[ii]].data = rhs[ii]
                 else:
-                    exec( fortran3d(eq.eqstr) )
+                    exec( fortran3d(eq.eqstr,self.sMap) )
             
         
                 
@@ -364,7 +384,12 @@ class pyrandaSim:
         if self.nx <= 1:
             return 0.0
         dfdx = self.emptyScalar()
-        self.PyMPI.der.ddx( val, dfdx )
+        try:
+            self.PyMPI.der.ddx( val, dfdx )
+        except:
+            import pdb
+            pdb.set_trace()
+
         return dfdx
 
     def ddy(self,val):
@@ -498,6 +523,44 @@ class pyrandaSim:
             self.updateVars()
         return time
 
+    def get_sMap(self):
+        sMap = {}
+        sMap['ddx(' ] = 'self.ddx('
+        sMap['ddy(' ] = 'self.ddy('
+        sMap['ddz(' ] = 'self.ddz('
+        sMap['fbar('] = 'self.filter('
+        sMap['gbar('] = 'self.gfilter('
+        sMap['grad('] = 'self.grad('
+        sMap['dot(' ] = 'numpy.dot('
+        sMap['abs(' ] = 'numpy.abs('
+        sMap['lap(' ] = 'self.laplacian('
+        
+        sMap[':x:']   = 'self.mesh.coords[0]'
+        sMap[':y:']   = 'self.mesh.coords[1]'
+        sMap[':z:']   = 'self.mesh.coords[2]'
+        self.sMap = sMap
+        
+    
+            
+def fortran3d(form,sMap):
+    """
+    Formula translator: Take in a string and return 
+    the mapped string for evaluation
+    """
+    keyS = ':'
+   
+    # Fill in form with variable data arrays
+    varList = findVar(form,keyS)
+    for ivar in varList:
+        sMap[':%s:'%ivar] = 'self.variables["%s"].data'%ivar
+    #
+    for mvar in sMap:
+        form = form.replace(mvar,sMap[mvar])
+    #
+    return form
+
+    
+    
 def findVar(string,keyS):
     """
     Return a list of the variable names to replace
@@ -524,33 +587,4 @@ def findVar(string,keyS):
             s += ss
     #
     return list(set(varStr))
-            
-def fortran3d(form):
-    """
-    Formula translator: Take in a string and return 
-    and 3d numpy array
-    """
-    keyS = ':'
-    sMap = {}
-    sMap['ddx(' ] = 'self.ddx('
-    sMap['ddy(' ] = 'self.ddy('
-    sMap['ddz(' ] = 'self.ddz('
-    sMap['fbar('] = 'self.filter('
-    sMap['gbar('] = 'self.gfilter('
-    sMap['grad('] = 'self.grad('
-    sMap['dot(' ] = 'numpy.dot('
-    sMap['abs(' ] = 'numpy.abs('
-    sMap['lap(' ] = 'self.laplacian('
-
-    
-    # ... Add more operators here
-    # Fill in form with variable data arrays
-    varList = findVar(form,keyS)
-    for ivar in varList:
-        sMap[':%s:'%ivar] = 'self.variables["%s"].data'%ivar
-    #
-    for mvar in sMap:
-        form = form.replace(mvar,sMap[mvar])
-    #
-    return form
 
