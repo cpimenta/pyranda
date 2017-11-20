@@ -34,22 +34,42 @@ ss.addPackage( pyrandaIBM(ss) )
 eom ="""
 ddt(:rho:)  =  -ddx(:rho:*:u:)                  - ddy(:rho:*:v:)
 ddt(:rhou:) =  -ddx(:rhou:*:u: + :p: - :tau:)   - ddy(:rhou:*:v:)
+ddt(:rhoA:)  =  -ddx(:rhoA:*:uA:)  
+ddt(:rhoAuA:) =  -ddx(:rhoAuA:*:uA: + :pA: - :tauA:)
+ddt(:EtA:)   =  -ddx( (:EtA: + :pA: - :tauA:)*:uA: ) 
 ddt(:rhov:) =  -ddx(:rhov:*:u:)                 - ddy(:rhov:*:v: + :p: - :tau:)
 ddt(:Et:)   =  -ddx( (:Et: + :p: - :tau:)*:u: ) - ddy( (:Et: + :p: - :tau:)*:v: )
+ddt(:phi:)  =  - :gx: * :u1:
+#:u1:        =  .001 * sin( simtime * 0.0 )
 :rho:       =  fbar( :rho:  )
 :rhou:      =  fbar( :rhou: )
+:rhoA:      =  fbar( :rhoA:  )
+:rhoAuA:    =  fbar( :rhoAuA: )
+:uA:        =  :rhoAuA: / :rhoA:
+:EtA:       =  fbar( :EtA:   )
 :rhov:      =  fbar( :rhov: )
 :Et:        =  fbar( :Et:   )
 :u:         =  :rhou: / :rho:
 :v:         =  :rhov: / :rho:
 :div:       =  ddx(:u:) + ddy(:v:)
-:beta:      =  gbar(abs(lap(lap(:div:))))*:dx: * :rho: * 0.2
+:beta:      =  gbar(abs(lap(lap(:div:))))*:dx6: * :rho: * 0.2
 :tau:       =  :beta:*:div:
+:divA:       =  ddx(:uA:) 
+:betaA:      =  gbar(abs(lap(lap(:divA:))))*:dx6: * :rhoA: * 0.2
+:tauA:       =  :betaA:*:divA:
 [:gx:,:gy:,:gz:] = grad( :phi: )
-[:u:,:v:,:w:] = ibmV( [:u:,:v:,0.0], :phi:, [:gx:,:gy:,:gz:] )
+[:u:,:v:,:w:] = ibmV( [:u:,:v:,0.0], :phi:, [:gx:,:gy:,:gz:], [:u1:,0.0,0.0] )
 :Et:          = ibmS( :Et:  , :phi:, [:gx:,:gy:,:gz:] )
 :rho:         = ibmS( :rho: , :phi:, [:gx:,:gy:,:gz:] )
+[:uA:,:v:,:w:] = ibmV( [:uA:,:v:,0.0], -:phi:, [-:gx:,-:gy:,-:gz:], [:u1:,0.0,0.0] )
+:EtA:          = ibmS( :EtA:  , -:phi:, [-:gx:,-:gy:,-:gz:] )
+:rhoA:         = ibmS( :rhoA: , -:phi:, [-:gx:,-:gy:,-:gz:] )
 :p:         =  ( :Et: - .5*:rho:*(:u:*:u: + :v:*:v:) ) * ( 1.4 - 1.0 )
+:pA:        =  ( :EtA: - .5*:rhoA:*(:uA:*:uA: ) ) * ( 1.4 - 1.0 )
+:uT:        =  numpy.where( :phi: > 0.0, :u:, :uA:)
+:pT:        =  numpy.where( :phi: > 0.0, :p:, :pA:)
+:rhoB:        =  numpy.where( :phi: > 0.0, :rho:, :rhoA:)
+:rhoT:        =  numpy.where( abs(:phi:/:dx:*2.0) > 1.0, :rhoB:, .5*(:phi:/:dx:*2.0 + 1.0)*(:rho:-:rhoA:) + (:rhoA:)   )
 """
 ss.EOM(eom)
 
@@ -67,13 +87,22 @@ ss.variables['rho'].data += 1.0
 #ss.variables['p'].data += 1.0 
 ss.variables['dx'].data += (x[1,0,0] - x[0,0,0])**6
 
-ss.variables['Et'].data =  ss.gfilter(numpy.where( x < numpy.pi , 1.0 / .4, .1 / .4))
-#ss.variables['Et'].data =  ss.gfilter(numpy.where( x < numpy.pi , 1.0 / .4, 0.99999 / .4))
-ss.variables['rho'].data = ss.gfilter(numpy.where( x < numpy.pi , 1.0, .125))
-#ss.variables['rho'].data = ss.gfilter(numpy.where( x < numpy.pi , 1.0, 1.0))
-ss.variables['dx'].data += (x[1,0,0] - x[0,0,0])**6
+#ss.variables['Et'].data =  ss.gfilter(numpy.where( x < numpy.pi , 1.0 / .4, .1 / .4))
+ss.variables['Et'].data =  ss.gfilter(numpy.where( x < numpy.pi , 1.0 / .4,1.0 / .4))
+#ss.variables['rho'].data = ss.gfilter(numpy.where( x < numpy.pi , 1.0, .125))
+ss.variables['rho'].data = ss.gfilter(numpy.where( x < numpy.pi , 1.0, 1.0))
 
-ss.variables['phi'].data = 4.0 - x
+ss.variables['EtA'].data =  ss.gfilter(numpy.where( x < numpy.pi , 1.0 / .4,1.0 / .4))
+ss.variables['rhoA'].data = ss.gfilter(numpy.where( x < numpy.pi , 10.0, 10.0))
+
+ss.variables['rhou'].data   = ss.variables['rho'].data * .70
+ss.variables['rhoAuA'].data = ss.variables['rhoA'].data * .70
+ss.variables['u1'].data = .70
+
+ss.variables['dx'].data += (x[1,0,0] - x[0,0,0])
+ss.variables['dx6'].data += (x[1,0,0] - x[0,0,0])**6
+
+ss.variables['phi'].data = 3.14159 - x
 
 
 time = 0.0
@@ -103,13 +132,17 @@ while tt > time:
     ss.iprint("%s -- %s" % (cnt,time)  )
     cnt += 1
     if viz:
-        phi = ss.PyMPI.zbar( ss.variables['u'].data )
-        if ss.PyMPI.master and (cnt%40 == 0) and True:
+        #v1 = ss.PyMPI.zbar( ss.variables['rhoA'].data )
+        v2 = ss.PyMPI.zbar( ss.variables['rhoT'].data )
+        if ss.PyMPI.master and (cnt%20 == 0) and True:
             plt.figure(2)
             plt.clf()
             #plt.contourf( xx,yy,phi ,64 )
-            plt.plot(xx[:,0],phi[:,0] ,'b.-')
+            #plt.plot(xx[:,0],v1[:,0] ,'b.-')
+            plt.plot(xx[:,0],v2[:,0] ,'k.-')
             plt.pause(.001)
+            #import pdb
+            #pdb.set_trace()
 
 
 

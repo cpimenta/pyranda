@@ -93,7 +93,7 @@ class pyrandaEq:
         """
         self.eqstr = eqstr
         self.kind = 'ALG'
-        self.LHS = findVar(eqstr.split('=')[0],':')
+        self.LHS = findVar(eqstr.split('=')[0],':', unique=False)  # Return values are assumed to all be unique.  Unique to false ensure order is preserved
         self.rank = len(self.LHS)
         
         # Make a lambda for this equation
@@ -258,6 +258,9 @@ class pyrandaSim:
         # Compute sMap
         self.get_sMap()
 
+        # Time
+        self.time = 0.0
+
     def iprint(self,sprnt):
         if self.PyMPI.master:
             print(sprnt)
@@ -367,12 +370,14 @@ class pyrandaSim:
         #
         for eq in self.equations:
             if ( eq.kind == 'ALG'):
-                if USE_LAMBDA:
+                if True:
                     rhs = eq.RHS(self)
                     if eq.rank == 1:
                         self.variables[eq.LHS[0]].data = rhs
                     else:
                         for ii in range(len(rhs)):
+                            #import pdb
+                            #pdb.set_trace()
                             self.variables[eq.LHS[ii]].data = rhs[ii]
                 else:
                     exec( fortran3d(eq.eqstr,self.sMap) )
@@ -520,6 +525,7 @@ class pyrandaSim:
                 tmp2[U] =  Brk[ii]*PHI[U]
                 self.variables[U].data =  self.variables[U].data + tmp2[U]
             time = time_i + eta[ii]*dt
+            self.time = time
             self.updateVars()
         return time
 
@@ -531,8 +537,12 @@ class pyrandaSim:
         sMap['fbar('] = 'self.filter('
         sMap['gbar('] = 'self.gfilter('
         sMap['grad('] = 'self.grad('
+        sMap['simtime'] = 'self.time'
         sMap['dot(' ] = 'numpy.dot('
         sMap['abs(' ] = 'numpy.abs('
+        sMap['sqrt(' ] = 'numpy.sqrt('
+        sMap['sin('] = 'numpy.sin('
+        sMap['tanh('] = 'numpy.tanh(' 
         sMap['lap(' ] = 'self.laplacian('
         
         sMap[':x:']   = 'self.mesh.coords[0]'
@@ -561,7 +571,7 @@ def fortran3d(form,sMap):
 
     
     
-def findVar(string,keyS):
+def findVar(string,keyS,unique=True):
     """
     Return a list of the variable names to replace
     """
@@ -586,5 +596,9 @@ def findVar(string,keyS):
         if inc:
             s += ss
     #
-    return list(set(varStr))
+    # list(set makes LHS our of order
+    if unique:
+        varStr = list(set(varStr))
+    
+    return varStr
 

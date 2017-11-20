@@ -26,7 +26,7 @@ class pyrandaIBM(pyrandaPackage):
         self.sMap = sMap
         
                  
-    def ibmVel(self,vel,phi,gphi):
+    def ibmVel(self,vel,phi,gphi,phivar=None):
 
         u = vel[0]
         v = vel[1]
@@ -39,7 +39,7 @@ class pyrandaIBM(pyrandaPackage):
         dL = self.pyranda.PyMPI.dx
     
         return self.slip_velocity( phi ,phix,phiy,phiz,
-                                   u,v,w,dL,new=False)
+                                   u,v,w,dL,new=False,phivar=phivar)
     
     def ibmS(self,scalar,phi,gphi):
         
@@ -74,7 +74,7 @@ class pyrandaIBM(pyrandaPackage):
         return val
 
 
-    def slip_velocity(self,SDF,gDx,gDy,gDz,v1_in,v2_in,v3_in,dx,new=False):
+    def slip_velocity(self,SDF,gDx,gDy,gDz,v1_in,v2_in,v3_in,dx,new=False,phivar=None):
 
         lens = dx * immersed_EPS    
 
@@ -82,6 +82,17 @@ class pyrandaIBM(pyrandaPackage):
         v2 = v2_in*1.0
         v3 = v3_in*1.0
 
+        if phivar:
+            v1_phi = phivar[0]
+            v2_phi = phivar[1]
+            v3_phi = phivar[2]
+
+            # Transform to interface velocity
+            v1 -= v1_phi
+            v2 -= v2_phi
+            v3 -= v3_phi
+
+            
         norm = 0.0
         v1 = self.smooth_terrain(SDF,gDx,gDy,gDz,v1,0.0,dx,new=new)
         #v2 = self.smooth_terrain(SDF,gDx,gDy,gDz,v2,0.0,dx,new=new)
@@ -106,6 +117,12 @@ class pyrandaIBM(pyrandaPackage):
         v2 = v2 + vn*gDy
         v3 = v3 + vn*gDz
 
+        if phivar:
+            v1 += v1_phi
+            v2 += v2_phi
+            v3 += v3_phi
+
+        
         #import pdb
         #pdb.set_trace()
 
