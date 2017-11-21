@@ -43,7 +43,6 @@ ddt(:rho:)  =  -ddx(:rho:*:u:)                  - ddy(:rho:*:v:)
 ddt(:rhou:) =  -ddx(:rhou:*:u: + :p: - :tau:)   - ddy(:rhou:*:v:)
 ddt(:rhov:) =  -ddx(:rhov:*:u:)                 - ddy(:rhov:*:v: + :p: - :tau:)
 ddt(:Et:)   =  -ddx( (:Et: + :p: - :tau:)*:u: ) - ddy( (:Et: + :p: - :tau:)*:v: )
-ddt(:phi:)  =  - :gx: * :u1:
 # Conservative filter of the EoM
 :rho:       =  fbar( :rho:  )
 :rhou:      =  fbar( :rhou: )
@@ -52,12 +51,12 @@ ddt(:phi:)  =  - :gx: * :u1:
 # Update the primatives and enforce the EOS
 :u:         =  :rhou: / :rho:
 :v:         =  :rhov: / :rho:
-:p:         =  ( :Et: - .5*:rho:*(:u:*:u: + :v:*:v:) ) * ( %s - 1.0 )
+:p:         =  ( :Et: - .5*:rho:*(:u:*:u: + :v:*:v:) ) * ( :gamma: - 1.0 )
 # Artificial bulk viscosity (old school way)
 :div:       =  ddx(:u:) + ddy(:v:)
 :beta:      =  gbar(abs(lap(lap(:div:))))*:dx6: * :rho: * 0.2
 :tau:       =  :beta:*:div:
-""" % ( gamma )
+"""
 
 
 # Add the EOM to the solver
@@ -65,28 +64,36 @@ ss.EOM(eom)
 
 
 # Initialize variables
-x = ss.mesh.coords[0]
-y = ss.mesh.coords[1]
-z = ss.mesh.coords[2]
-
-rad = numpy.sqrt( (x-numpy.pi)**2  )
+ic = "rad = sqrt( (:x:-numpy.pi)**2  ) "
 if dim == 2:
-    rad = numpy.sqrt( (x-numpy.pi)**2  + (y-numpy.pi)**2 )
-    
+    ic = "rad = sqrt( (:x:-numpy.pi)**2  +  (:y:-numpy.pi)**2 ) "
+
+# Linear wave propagation in 1d and 2d
 if (problem == 'linear'):
     pvar = 'p'
-    ratio = 1.0 + 0.01 * numpy.exp( -(rad)**2/(.2**2) )
-    ss.variables['Et'].data = 1.0*ratio
-    ss.variables['rho'].data += 1.0 
-    
+    ic += """
+    :gamma: = 1.4
+    ratio = 1.0 + 0.01 * exp( -(rad)**2/(.2**2) )
+    :Et: = ratio
+    :rho: = 1.0
+    """
+
+# SOD shock tube in 1d and 2d
 if (problem == 'sod'):
     pvar = 'rho'
     if dim == 1:
-        rad = x/2.0
-    ss.variables['Et'].data =  ss.gfilter(numpy.where(rad < numpy.pi/2.0 , 1.0 / .4,.1 / .4))
-    ss.variables['rho'].data = ss.gfilter(numpy.where(rad < numpy.pi/2.0 , 1.0, .125))
+        ic = 'rad = :x: / 2.0'
+    ic += """
+    :gamma: = 1.4
+    :Et:  = gbar( where( rad < :pi:/2.0, 1.0/(:gamma:-1.0) , .1 /(:gamma:-1.0) ) )
+    :rho: = gbar( where( rad < :pi:/2.0, 1.0    , .125 ) )
+    """
 
+# Set the initial conditions
+ss.setIC(ic)
+    
 # Length scale for art. viscosity
+x = ss.mesh.coords[0]
 ss.variables['dx6'].data += (x[1,0,0] - x[0,0,0])**6
 
 
@@ -107,7 +114,7 @@ yy   =  ss.PyMPI.zbar( y )
 dt = dt_max
 cnt = 1
 viz_freq = 25
-ss.updateVars()
+
 while tt > time:
 
     # Update the EOM and get next dt

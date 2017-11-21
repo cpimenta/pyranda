@@ -249,6 +249,7 @@ class pyrandaSim:
         self.equations = []
         self.conserved = []
         self.variables = {}
+        self.initial_conditions = []
         self.nPDE = 0
         self.nALG = 0
 
@@ -338,6 +339,22 @@ class pyrandaSim:
         # Set up the variables in memory
         self.allocate()
             
+    def setIC(self,ics):
+        """
+        Evaluate the initial conditions and then update variables
+        """
+        # Split up the equation lines
+        ic_lines = filter(None,ics.split('\n'))
+        ic_lines = [el.replace(' ','') for el in ic_lines ]  # Comments work
+        ic_lines = filter(None,ic_lines)
+        ic_lines = [el for el in ic_lines if el.strip()[0] != '#']  # Comments work
+        
+        for ic in ic_lines:
+
+            ic_mod = ic + '+self.emptyScalar()'
+            exec(fortran3d(ic_mod,self.sMap))                           
+        
+        self.updateVars()
 
         
     def emptyScalar(self):
@@ -514,7 +531,7 @@ class pyrandaSim:
             PHI[U]  = numpy.asfortranarray( numpy.zeros(  shape ) )
         
         # Get primative flow variables
-        self.updateVars()
+        #self.updateVars()
         time_i = time
         for ii in range(5):
             #    ii
@@ -538,12 +555,15 @@ class pyrandaSim:
         sMap['gbar('] = 'self.gfilter('
         sMap['grad('] = 'self.grad('
         sMap['simtime'] = 'self.time'
+        sMap['lap(' ] = 'self.laplacian('
         sMap['dot(' ] = 'numpy.dot('
         sMap['abs(' ] = 'numpy.abs('
         sMap['sqrt(' ] = 'numpy.sqrt('
         sMap['sin('] = 'numpy.sin('
-        sMap['tanh('] = 'numpy.tanh(' 
-        sMap['lap(' ] = 'self.laplacian('
+        sMap['tanh('] = 'numpy.tanh('
+        sMap['exp('] = 'numpy.exp(' 
+        sMap['where('] = 'numpy.where('
+        sMap[':pi:'] = 'numpy.pi'
         
         sMap[':x:']   = 'self.mesh.coords[0]'
         sMap[':y:']   = 'self.mesh.coords[1]'
@@ -562,7 +582,9 @@ def fortran3d(form,sMap):
     # Fill in form with variable data arrays
     varList = findVar(form,keyS)
     for ivar in varList:
-        sMap[':%s:'%ivar] = 'self.variables["%s"].data'%ivar
+        kvar = '%s%s%s' % (keyS,ivar,keyS)
+        if kvar not in sMap:
+            sMap[kvar] = 'self.variables["%s"].data'%ivar
     #
     for mvar in sMap:
         form = form.replace(mvar,sMap[mvar])
