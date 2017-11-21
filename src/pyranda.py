@@ -194,6 +194,11 @@ class pyrandaMPI():
 
         return tsum
 
+    def sum3D(self,data):
+
+        lsum = numpy.sum( data )
+        tsum = self.comm.allreduce( lsum, op=MPI.SUM )
+
 
     def xbar(self,data):        
         return self.sum2D( data, self.comm,self.ny,self.nz,0,
@@ -281,8 +286,9 @@ class pyrandaSim:
         
 
     def addVar(self,name,kind=None,rank='scalar'):
-        var = pyrandaVar(name,kind,rank)
-        self.variables[name] = var
+        if name not in self.variables:
+            var = pyrandaVar(name,kind,rank)
+            self.variables[name] = var
 
     def addEqu(self,equation):
 
@@ -318,7 +324,7 @@ class pyrandaSim:
         var_names = list(set(var_names))
 
         for evar in var_names:
-            self.addVar(evar,kind='conserved')   # Todo: classisfy variables
+            self.addVar(evar,kind='conserved')   # Todo: classify variables
         
         if self.PyMPI.master:
             for variable in self.variables:
@@ -348,9 +354,20 @@ class pyrandaSim:
         ic_lines = [el.replace(' ','') for el in ic_lines ]  # Comments work
         ic_lines = filter(None,ic_lines)
         ic_lines = [el for el in ic_lines if el.strip()[0] != '#']  # Comments work
+
+        var_names = []
+
+        #### Get unique set of variables ####
+        for eq in ic_lines:
+            evars = findVar( eq, ':')
+            var_names += evars
+
+        var_names = list(set(var_names))
+
+        for evar in var_names:
+            self.addVar(evar,kind='conserved')   # Todo: classify variables
         
         for ic in ic_lines:
-
             ic_mod = ic + '+self.emptyScalar()'
             exec(fortran3d(ic_mod,self.sMap))                           
         
@@ -556,6 +573,7 @@ class pyrandaSim:
         sMap['grad('] = 'self.grad('
         sMap['simtime'] = 'self.time'
         sMap['lap(' ] = 'self.laplacian('
+        sMap['sum(' ] = 'self.PyMPI.sum3D('
         sMap['dot(' ] = 'numpy.dot('
         sMap['abs(' ] = 'numpy.abs('
         sMap['sqrt(' ] = 'numpy.sqrt('
