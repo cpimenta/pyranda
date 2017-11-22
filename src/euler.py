@@ -93,7 +93,10 @@ if (problem == 'sod'):
 ss.setIC(ic)
     
 # Length scale for art. viscosity
+# Initialize variables
 x = ss.mesh.coords[0]
+y = ss.mesh.coords[1]
+z = ss.mesh.coords[2]
 ss.variables['dx6'].data += (x[1,0,0] - x[0,0,0])**6
 
 
