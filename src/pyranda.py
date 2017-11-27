@@ -574,6 +574,7 @@ class pyrandaSim:
         sMap['simtime'] = 'self.time'
         sMap['lap(' ] = 'self.laplacian('
         sMap['sum(' ] = 'self.PyMPI.sum3D('
+        sMap['sign(' ] = 'numpy.sign('
         sMap['dot(' ] = 'numpy.dot('
         sMap['abs(' ] = 'numpy.abs('
         sMap['sqrt(' ] = 'numpy.sqrt('
