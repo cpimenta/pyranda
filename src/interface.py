@@ -37,7 +37,7 @@ eom ="""
 # Primary Equations of motion here
 ddt(:rho:)  =  -ddx(:rho:*:u: - :tau:) - ddy(:rho:*:v: - :tau:) 
 ddt(:rhoA:)  =  -ddx(:rhoA:*:uA: - :tauA:) -ddy(:rhoA:*:vA: - :tauA:) 
-ddt(:phi:)  =  - :gx: * :u1: - :gy: * :v1:  - sign(:phi:)*(:mgp:-1.0)
+ddt(:phi:)  =  - :gx: * :u1: - :gy: * :v1:  #- sign(:phi:)*(:mgp:-1.0)
 # Conservative filter of the EoM
 :rho:       =  fbar( :rho:  )
 :rhoA:      =  fbar( :rhoA:  )
@@ -112,7 +112,7 @@ dt_max = v / ss.mesh.nn[0] * L * .25
 
 tt = L/v * 1.0 #dt_max
 if not twoD:
-    tt *= .25
+    tt *= .2
 
 
 xx   =  ss.PyMPI.zbar( x )
