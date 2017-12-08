@@ -77,22 +77,23 @@ pyloc = sexe( cd_spack + './spack location --install-dir %s' % (pyspk) , ret_out
 
 # Make directory in site-packages
 pyPackagesLocation = '%s/lib/%s/site-packages' % (pyloc,pyver)
-cmd_mkdir_pyranda = 'mkdir %s/pyranda' % pyPackagesLocation
-sexe( cmd_mkdir_pyranda )
 
-cmd_ln_pyrandaLib = 'ln -s %s/pyranda/* %s/pyranda/' % (os.getcwd() , pyPackagesLocation)
+if not os.path.isdir( '%s/pyranda' % pyPackagesLocation):
+    cmd_mkdir_pyranda = 'mkdir %s/pyranda' % pyPackagesLocation
+    sexe( cmd_mkdir_pyranda )
+
+cmd_ln_pyrandaLib = 'ln -sf %s/pyranda/* %s/pyranda/' % (os.getcwd() , pyPackagesLocation)
 sexe( cmd_ln_pyrandaLib )
 
 
+# Make link to exec for convenience
 print 'Installing pyranda to bin/pyranda'
-sexe( 'mkdir bin')
-cmd_ln_pyranda = 'ln -s %s/bin/%s bin/pyranda' % ( pyloc, pyver )
+if os.path.isdir( 'bin'):
+    sexe( 'mkdir bin')
+
+cmd_ln_pyranda = 'ln -sf %s/bin/%s bin/pyranda' % ( pyloc, pyver )
 sexe( cmd_ln_pyranda )
-# path-to-python-install/lib/python2.7/pyranda -> pyranda
 
-
-# Install local sym link to python binary
-#bin/pyranda -> path-to-spack-python-build
 
 
 
