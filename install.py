@@ -62,7 +62,7 @@ spack_bld = cd_spack + './spack install py-floatpy'
 
 
 # Get python version number
-py_version = cd_spack + 'spack find python | grep python'
+py_version = cd_spack + './spack find python | grep python'
 out = sexe( py_version , ret_output=True )
 Major = out[1].strip().split('@')[1].split('.')[0] 
 Minor = out[1].strip().split('@')[1].split('.')[1]
@@ -73,7 +73,7 @@ pyspk = 'python@%s.%s.%s' % (Major,Minor,Step)
 
 # Install pyranda symbolic links into site-packages
 print 'Installing pyranda library links to python'
-pyloc = sexe( cd_spack + 'spack location --install-dir %s' % (pyspk) , ret_output=True)[1].strip()
+pyloc = sexe( cd_spack + './spack location --install-dir %s' % (pyspk) , ret_output=True)[1].strip()
 
 # Make directory in site-packages
 pyPackagesLocation = '%/lib/%s/site-packages' % (pyloc,pyver)
