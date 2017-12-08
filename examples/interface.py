@@ -1,13 +1,12 @@
-from mpi4py import MPI
 import numpy 
 import re
 import sys
 import time
-sys.path.append('/Users/olson45/Research/FloATPy')
 import matplotlib.pyplot as plt
-from pyranda import pyrandaSim,pyrandaMPI,fortran3d
 
-from ibm import pyrandaIBM
+from pyranda.pyranda import pyrandaSim,pyrandaMPI,fortran3d
+
+from pyranda.pyrandaIBM import pyrandaIBM
 
 
 ## Define a mesh

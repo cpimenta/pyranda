@@ -1,20 +1,17 @@
-from mpi4py import MPI
 import numpy 
 import re
 import sys
 import time
-sys.path.append('/Users/olson45/Research/FloATPy')
 import matplotlib.pyplot as plt
 from matplotlib import cm
-from pyranda import pyrandaSim,pyrandaMPI,fortran3d
-
-from ibm import pyrandaIBM
+from pyranda.pyranda import pyrandaSim,pyrandaMPI,fortran3d
+from pyranda import pyrandaIBM
 
 
 ## Define a mesh
-Npts = 128
+Npts = 256
 L = numpy.pi * 2.0  
-dim = 2
+dim = 1
 gamma = 1.4
 
 problem = 'linear'
