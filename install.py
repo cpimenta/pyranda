@@ -80,7 +80,7 @@ pyPackagesLocation = '%s/lib/%s/site-packages' % (pyloc,pyver)
 cmd_mkdir_pyranda = 'mkdir %s/pyranda' % pyPackagesLocation
 sexe( cmd_mkdir_pyranda )
 
-cmd_ln_pyrandaLib = 'ln -s %/pyranda/* %s/pyranda/' % (os.getcwd() , pyPackagesLocation)
+cmd_ln_pyrandaLib = 'ln -s %s/pyranda/* %s/pyranda/' % (os.getcwd() , pyPackagesLocation)
 sexe( cmd_ln_pyrandaLib )
 
 
