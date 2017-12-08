@@ -76,7 +76,7 @@ print 'Installing pyranda library links to python'
 pyloc = sexe( cd_spack + './spack location --install-dir %s' % (pyspk) , ret_output=True)[1].strip()
 
 # Make directory in site-packages
-pyPackagesLocation = '%/lib/%s/site-packages' % (pyloc,pyver)
+pyPackagesLocation = '%s/lib/%s/site-packages' % (pyloc,pyver)
 cmd_mkdir_pyranda = 'mkdir %s/pyranda' % pyPackagesLocation
 sexe( cmd_mkdir_pyranda )
 
