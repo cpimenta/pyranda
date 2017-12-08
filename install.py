@@ -88,7 +88,7 @@ sexe( cmd_ln_pyrandaLib )
 
 # Make link to exec for convenience
 print 'Installing pyranda to bin/pyranda'
-if os.path.isdir( 'bin'):
+if not os.path.isdir( 'bin'):
     sexe( 'mkdir bin')
 
 cmd_ln_pyranda = 'ln -sf %s/bin/%s bin/pyranda' % ( pyloc, pyver )
