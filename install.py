@@ -50,7 +50,7 @@ def sexe(cmd,ret_output=False,echo = False):
 spack_repo = 'https://github.com/flow-phys/spack.git'   # Britton's fork for now.
 cmd = 'git clone %s spack_library' % spack_repo
 print "Cloning Spack source for building packages..."
-#out = sexe( cmd )
+out = sexe( cmd )
 print "Done"
 
 
@@ -58,7 +58,7 @@ print "Done"
 print "Installing spack libraries ..."
 cd_spack = 'cd spack_library/bin;'
 spack_bld = cd_spack + './spack install py-floatpy'
-#out = sexe( spack_bld )
+out = sexe( spack_bld )
 
 
 # Activate python modules
