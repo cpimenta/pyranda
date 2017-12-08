@@ -61,6 +61,12 @@ spack_bld = cd_spack + './spack install py-floatpy'
 #out = sexe( spack_bld )
 
 
+# Activate python modules
+py_mods = ['py-numpy','py-matplotlib','py-floatpy','py-f90wrap','py-mpi4py']
+for pym in py_mods:
+    sexe(cd_spack + './spack activate %s' % pym)
+
+
 # Get python version number
 py_version = cd_spack + './spack find python | grep python'
 out = sexe( py_version , ret_output=True )
