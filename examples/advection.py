@@ -4,10 +4,12 @@ import re
 import sys
 import time
 #sys.path.append('/Users/olson45/Research/FloATPy')
-import matplotlib.pyplot as plt
-from pyranda.pyranda import pyrandaSim,pyrandaMPI,fortran3d
+sys.path.append('../pyranda')
 
-from ibm import pyrandaIBM
+import matplotlib.pyplot as plt
+from pyranda import pyrandaSim,pyrandaMPI,fortran3d
+
+from pyrandaIBM import pyrandaIBM
 
 
 ## Define a mesh
