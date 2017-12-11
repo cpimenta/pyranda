@@ -11,8 +11,6 @@ from floatpy.filters.filter import Filter
 
 import matplotlib.pyplot as plt
 
-USE_LAMBDA = True
-
 class pyrandaMesh:
 
     def __init__(self,mesh_options,pympi):
@@ -86,18 +84,53 @@ class pyrandaVar:
         
 class pyrandaEq:
 
-    def __init__(self,eqstr,sMap):
+    def __init__(self,eqstr,sMap,pympi):
         """
         Read in eqstr and extract the LHS variable 
         and the kind of equation (PDE or ALG)
         """
         self.eqstr = eqstr
         self.kind = 'ALG'
-        self.LHS = findVar(eqstr.split('=')[0],':', unique=False)  # Return values are assumed to all be unique.  Unique to false ensure order is preserved
-        self.rank = len(self.LHS)
+        self.active = True
+        if '=' in eqstr:
+            self.LHS = findVar(eqstr.split('=')[0],':', unique=False)  # Return values are assumed to all be unique.  Unique to false ensure order is preserved
+            self.rank = len(self.LHS)
+        else:
+            self.LHS = None   # No return functions
+            
+        # See if this is a boundary
+        self.islice = None
+        if self.rank == 1 and self.LHS:
+            LHS_str = eqstr.split('=')[0]
+            if ('[' in LHS_str and ']' in LHS_str):
+                self.active = False
+                bct = LHS_str.split('[')[1].split(']')[0]
+                if bct == 'x1' and pympi.x1proc:
+                    self.islice = '[0,:,:]'
+                    self.active = True
+                if bct == 'xn' and pympi.xnproc:
+                    self.islice = '[-1,:,:]'
+                    self.active = True
+                if bct == 'y1' and pympi.y1proc:
+                    self.islice = '[0,:,:]'
+                    self.active = True
+                if bct == 'yn' and pympi.ynproc:
+                    self.islice = '[-1,:,:]'
+                    self.active = True
+                if bct == 'z1' and pympi.z1proc:
+                    self.islice = '[0,:,:]'
+                    self.active = True
+                if bct == 'zn' and pympi.znproc:
+                    self.islice = '[-1,:,:]'
+                    self.active = True
+
+                
         
         # Make a lambda for this equation
         Srhs = fortran3d( self.eqstr.split('=')[1] , sMap)
+
+        # Check for slices
+        
         self.RHS = eval( 'lambda self: ' + Srhs )
 
         
@@ -159,7 +192,16 @@ class pyrandaMPI():
             self.master = False
             if self.comm.rank == 0:
                 self.master = True
-            
+
+
+            self.x1proc = False
+            if self.xcom.rank == 0:
+                self.x1proc = True
+
+            self.xnproc = False
+            if self.xcom.rank == self.xcom.size - 1:
+                self.xnproc = True
+
 
     def emptyScalar(self):
         return numpy.empty( self.chunk_3d_size, dtype=numpy.float64, order='F')*0.0
@@ -292,7 +334,7 @@ class pyrandaSim:
 
     def addEqu(self,equation):
 
-        peq = pyrandaEq(equation,self.sMap) 
+        peq = pyrandaEq(equation,self.sMap,self.PyMPI) 
         self.equations.append( peq )
         if peq.kind == 'PDE':
             self.nPDE += 1
@@ -390,11 +432,7 @@ class pyrandaSim:
             if ( eqo.kind == 'PDE' ):
                 lhs = eqo.LHS[0]
                 Srhs = eq.split('=')[1]  # This is a string to evaluate
-                if USE_LAMBDA:
-                    flux[lhs] = eqo.RHS(self)
-                else:
-                    rhs = eval( fortran3d(Srhs,self.sMap) )  # This is where the work is done
-                    flux[lhs] = rhs
+                flux[lhs] = eqo.RHS(self)
 
         return flux
 
@@ -403,18 +441,22 @@ class pyrandaSim:
         # Update the equations
         #
         for eq in self.equations:
-            if ( eq.kind == 'ALG'):
-                if True:
-                    rhs = eq.RHS(self)
-                    if eq.rank == 1:
-                        self.variables[eq.LHS[0]].data = rhs
+
+            if not eq.active:
+                continue
+
+            if ( eq.kind == 'ALG'):            
+                rhs = eq.RHS(self)
+                if eq.rank == 1:
+                    if eq.islice:
+                        exec( 'self.variables[eq.LHS[0]].data%s = rhs' % eq.islice )
                     else:
-                        for ii in range(len(rhs)):
-                            #import pdb
-                            #pdb.set_trace()
-                            self.variables[eq.LHS[ii]].data = rhs[ii]
+                        self.variables[eq.LHS[0]].data = rhs
                 else:
-                    exec( fortran3d(eq.eqstr,self.sMap) )
+                    for ii in range(len(rhs)):
+                        #import pdb
+                        #pdb.set_trace()
+                        self.variables[eq.LHS[ii]].data = rhs[ii]
             
         
                 

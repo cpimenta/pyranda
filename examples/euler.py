@@ -5,13 +5,13 @@ import time
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from pyranda.pyranda import pyrandaSim,pyrandaMPI,fortran3d
-from pyranda import pyrandaIBM
-
+from pyranda.pyrandaIBM import pyrandaIBM
+from pyranda.pyrandaBC  import pyrandaBC
 
 ## Define a mesh
-Npts = 256
+Npts = 128
 L = numpy.pi * 2.0  
-dim = 1
+dim = 2
 gamma = 1.4
 
 problem = 'linear'
@@ -20,7 +20,7 @@ problem = 'sod'
 Lp = L * (Npts-1.0) / Npts
 mesh_options = {}
 mesh_options['type'] = 'cartesian'
-mesh_options['periodic'] = numpy.array([False, True, True])
+mesh_options['periodic'] = numpy.array([False, False, True])
 mesh_options['dim'] = 3
 mesh_options['x1'] = [ 0.0 , 0.0  ,  0.0 ]
 mesh_options['xn'] = [ Lp   , Lp    ,  Lp ]
@@ -31,7 +31,7 @@ if dim == 2:
 
 # Initialize a simulation object on a mesh
 ss = pyrandaSim('advection',mesh_options)
-
+ss.addPackage( pyrandaBC(ss) )
 
 # Define the equations of motion
 eom ="""
@@ -53,6 +53,12 @@ ddt(:Et:)   =  -ddx( (:Et: + :p: - :tau:)*:u: ) - ddy( (:Et: + :p: - :tau:)*:v: 
 :div:       =  ddx(:u:) + ddy(:v:)
 :beta:      =  gbar(abs(lap(lap(:div:))))*:dx6: * :rho: * 0.2
 :tau:       =  :beta:*:div:
+# Apply constant BCs
+#:rho:[x1] =  1.0 
+#:rho:[xn] =  0.125 
+:rho:[x1] = bc.extrap('rho','x1')
+#:u:[x1] =  0.0 
+#:u:[xn] =  0.0
 """
 
 

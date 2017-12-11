@@ -1,11 +1,10 @@
-from mpi4py import MPI
 import numpy 
 import re
 import sys
 import time
-sys.path.append('/Users/olson45/Research/FloATPy')
+
 import matplotlib.pyplot as plt
-from pyranda import pyrandaSim,pyrandaMPI
+from pyranda.pyranda import pyrandaSim,pyrandaMPI
 
 
 ## Define a mesh
@@ -16,7 +15,7 @@ Lp = L * (Npts-1.0) / Npts
 mesh_options = {}
 mesh_options['type'] = 'cartesian'
 mesh_options['periodic'] = numpy.array([True, True, True])
-mesh_options['dim'] = 3
+mesh_options['dim'] = 2
 mesh_options['x1'] = [ 0.0 , 0.0  ,  0.0 ]
 mesh_options['xn'] = [ Lp   , Lp    ,  Lp ]
 mesh_options['nn'] = [ Npts, Npts ,  1  ]
@@ -44,9 +43,14 @@ x = ss.mesh.coords[0]
 y = ss.mesh.coords[1]
 z = ss.mesh.coords[2]
 
-rad = numpy.sqrt( (x-numpy.pi)**2 + (y-numpy.pi)**2 ) #+ (z-numpy.pi)**2  )
-ss.variables['eta'].data = 1.0 + .01 * numpy.exp( -(rad)**2/(.2**2) )
-ss.variables['g'].data = 1.0
+# Set some initial comnditions
+ic = """
+rad = sqrt( (:x:-:pi:)**2 + (:y:-:pi:)**2 )
+:eta: = 1.0 + 0.01 * exp( -(rad)*2/(0.7**2) )
+:g: = 1.0
+"""
+
+ss.setIC(ic)
 
 
 time = 0.0
@@ -59,15 +63,9 @@ dt_max = v / ss.mesh.nn[0] * .75
 
 tt = L/v * .5 #dt_max
 
-phi1 = ss.PyMPI.zbar( ss.variables['eta'].data )
+
 xx   =  ss.PyMPI.zbar( x )
 yy   =  ss.PyMPI.zbar( y )
-if ss.PyMPI.master:
-    plt.figure(1)
-    plt.contour( xx,yy,phi1 , 32 )
-    plt.figure(2)
-    plt.plot(xx[:,Npts/2],phi1[:,Npts/2],'k--')
-    
 
 
 dt = dt_max
@@ -87,15 +85,3 @@ while tt > time:
             plt.contourf( xx,yy,phi ,32 )
             plt.pause(.001)
 
-
-phi = ss.PyMPI.zbar( ss.variables['eta'].data )
-if ss.PyMPI.master:
-    plt.figure(1)
-    plt.contour( xx,yy,phi , 32 )
-    plt.figure(2)
-    plt.plot(xx[:,Npts/2],phi[:,Npts/2],'b-')
-
-    plt.figure(3)
-    plt.plot(xx[:,Npts/2],phi[:,Npts/2] ,'b-')
-
-    plt.show()
