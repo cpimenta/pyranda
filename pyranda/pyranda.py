@@ -92,45 +92,19 @@ class pyrandaEq:
         self.eqstr = eqstr
         self.kind = 'ALG'
         self.active = True
+        self.rank = 1
         if '=' in eqstr:
             self.LHS = findVar(eqstr.split('=')[0],':', unique=False)  # Return values are assumed to all be unique.  Unique to false ensure order is preserved
             self.rank = len(self.LHS)
         else:
             self.LHS = None   # No return functions
             
-        # See if this is a boundary
-        self.islice = None
-        if self.rank == 1 and self.LHS:
-            LHS_str = eqstr.split('=')[0]
-            if ('[' in LHS_str and ']' in LHS_str):
-                self.active = False
-                bct = LHS_str.split('[')[1].split(']')[0]
-                if bct == 'x1' and pympi.x1proc:
-                    self.islice = '[0,:,:]'
-                    self.active = True
-                if bct == 'xn' and pympi.xnproc:
-                    self.islice = '[-1,:,:]'
-                    self.active = True
-                if bct == 'y1' and pympi.y1proc:
-                    self.islice = '[0,:,:]'
-                    self.active = True
-                if bct == 'yn' and pympi.ynproc:
-                    self.islice = '[-1,:,:]'
-                    self.active = True
-                if bct == 'z1' and pympi.z1proc:
-                    self.islice = '[0,:,:]'
-                    self.active = True
-                if bct == 'zn' and pympi.znproc:
-                    self.islice = '[-1,:,:]'
-                    self.active = True
-
-                
-        
+                       
         # Make a lambda for this equation
-        Srhs = fortran3d( self.eqstr.split('=')[1] , sMap)
-
-        # Check for slices
-        
+        if self.LHS:
+            Srhs = fortran3d( self.eqstr.split('=')[1] , sMap)
+        else:
+            Srhs = fortran3d( self.eqstr , sMap)
         self.RHS = eval( 'lambda self: ' + Srhs )
 
         
@@ -201,6 +175,14 @@ class pyrandaMPI():
             self.xnproc = False
             if self.xcom.rank == self.xcom.size - 1:
                 self.xnproc = True
+
+            self.y1proc = False
+            if self.ycom.rank == 0:
+                self.y1proc = True
+
+            self.ynproc = False
+            if self.ycom.rank == self.ycom.size - 1:
+                self.ynproc = True
 
 
     def emptyScalar(self):
@@ -447,20 +429,20 @@ class pyrandaSim:
 
             if ( eq.kind == 'ALG'):            
                 rhs = eq.RHS(self)
+
+                # If no LHS , then on to the next eq
+                if not eq.LHS:
+                    continue
+                
                 if eq.rank == 1:
-                    if eq.islice:
-                        exec( 'self.variables[eq.LHS[0]].data%s = rhs' % eq.islice )
-                    else:
-                        self.variables[eq.LHS[0]].data = rhs
+                    self.variables[eq.LHS[0]].data = rhs
                 else:
                     for ii in range(len(rhs)):
                         #import pdb
                         #pdb.set_trace()
                         self.variables[eq.LHS[ii]].data = rhs[ii]
             
-        
-                
-        
+                    
     def ddx(self,val):
         if self.nx <= 1:
             return 0.0

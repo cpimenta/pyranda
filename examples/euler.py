@@ -54,11 +54,8 @@ ddt(:Et:)   =  -ddx( (:Et: + :p: - :tau:)*:u: ) - ddy( (:Et: + :p: - :tau:)*:v: 
 :beta:      =  gbar(abs(lap(lap(:div:))))*:dx6: * :rho: * 0.2
 :tau:       =  :beta:*:div:
 # Apply constant BCs
-#:rho:[x1] =  1.0 
-#:rho:[xn] =  0.125 
-:rho:[x1] = bc.extrap('rho','x1')
-#:u:[x1] =  0.0 
-#:u:[xn] =  0.0
+bc.extrap(['rho','Et'],['x1','xn','y1','yn'])
+bc.const(['u','v'],['x1','xn','y1','yn'],0.0)
 """
 
 
@@ -109,7 +106,7 @@ viz = True
 
 # Approx a max dt and stopping time
 v = 1.0
-dt_max = v / ss.mesh.nn[0] * 0.5
+dt_max = v / ss.mesh.nn[0] * 0.75
 tt = L/v * .25 #dt_max
 
 # Mesh for viz on master
