@@ -13,7 +13,7 @@ from pyranda.pyrandaIBM import pyrandaIBM
 Npts = 128
 L = numpy.pi * 2.0  
 Lp = L * (Npts-1.0) / Npts
-twoD = True
+twoD = False
 
 mesh_options = {}
 mesh_options['type'] = 'cartesian'
@@ -144,7 +144,7 @@ while tt > time:
     ss.iprint("%s -- %s" % (cnt,time)  )
     cnt += 1
     if viz:
-        #v1 = ss.PyMPI.zbar( ss.variables['rhoA'].data )
+        v1 = ss.PyMPI.zbar( ss.variables['rhoA'].data )
         v2 = ss.PyMPI.zbar( ss.variables['rhoT'].data )
         v = ss.PyMPI.zbar( ss.variables['rho'].data )
         vA = ss.PyMPI.zbar( ss.variables['rhoA'].data )
@@ -152,8 +152,8 @@ while tt > time:
             plt.figure(1)
             plt.clf()
             plt.plot(xx[:,0],v2[:,0] ,'k.-')
-            #plt.plot(xx[:,0],v[:,0] ,'r.-')
-            #plt.plot(xx[:,0],vA[:,0] ,'b.-')
+            plt.plot(xx[:,0],v[:,0] ,'r.-')
+            plt.plot(xx[:,0],vA[:,0] ,'b.-')
             plt.pause(.001)
             if twoD:
                 plt.figure(2)

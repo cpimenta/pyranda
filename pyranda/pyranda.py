@@ -223,6 +223,19 @@ class pyrandaMPI():
         lsum = numpy.sum( data )
         tsum = self.comm.allreduce( lsum, op=MPI.SUM )
 
+    def max3D(self,data):
+
+        lmax = numpy.max( data )
+        tmax = self.comm.allreduce( lmax, op=MPI.MAX )
+
+        return tmax
+
+    def min3D(self,data):
+
+        lmin = numpy.max( data )
+        tmin = self.comm.allreduce( lmin, op=MPI.MIN )
+
+        return tmin
 
     def xbar(self,data):        
         return self.sum2D( data, self.comm,self.ny,self.nz,0,
@@ -392,10 +405,10 @@ class pyrandaSim:
             self.addVar(evar,kind='conserved')   # Todo: classify variables
         
         for ic in ic_lines:
-            ic_mod = ic + '+self.emptyScalar()'
+            ic_mod = ic #+ '+self.emptyScalar()'
             exec(fortran3d(ic_mod,self.sMap))                           
         
-        self.updateVars()
+        #self.updateVars()
 
         
     def emptyScalar(self):
@@ -606,6 +619,7 @@ class pyrandaSim:
         sMap['tanh('] = 'numpy.tanh('
         sMap['exp('] = 'numpy.exp(' 
         sMap['where('] = 'numpy.where('
+        sMap['3d()'] = 'self.emptyScalar()'
         sMap[':pi:'] = 'numpy.pi'
         
         sMap[':x:']   = 'self.mesh.coords[0]'

@@ -7,7 +7,7 @@ from pyrandaPackage import pyrandaPackage
 
 
 
-immersed_iter = 3
+immersed_iter = 2
 immersed_CFL = 0.5
 immersed_EPS = 0.1
 
@@ -36,10 +36,10 @@ class pyrandaIBM(pyrandaPackage):
         phiy = gphi[1]
         phiz = gphi[2]
 
-        dL = self.pyranda.PyMPI.dx
+        lens = self.pyranda.PyMPI.dx * immersed_EPS
     
         return self.slip_velocity( phi ,phix,phiy,phiz,
-                                   u,v,w,dL,new=False,phivar=phivar)
+                                   u,v,w,lens,new=False,phivar=phivar)
     
     def ibmS(self,scalar,phi,gphi):
         
@@ -47,22 +47,18 @@ class pyrandaIBM(pyrandaPackage):
         phiy = gphi[1]
         phiz = gphi[2]
         
-        epsi = .01
-        
-        dL = self.pyranda.PyMPI.dx
+        epsi = 0.0    
     
         return self.smooth_terrain( phi, phix, phiy, phiz,
-                                    scalar,epsi,dL)
+                                    scalar,epsi)
     
-    
-    
-
-    def smooth_terrain(self,SDF,gDx,gDy,gDz,val_in,epsi,dx,new=False):
         
-        GridLen = dx
-    
-        val = val_in * 1.0
 
+    def smooth_terrain(self,SDF,gDx,gDy,gDz,val_in,epsi,new=False):
+        
+        val = val_in * 1.0
+        GridLen = self.pyranda.PyMPI.dx
+        
         for i in range(immersed_iter):
             [tvx,tvy,tvz] = self.pyranda.grad(val)
             term = tvx*gDx+tvy*gDy+tvz*gDz
@@ -74,9 +70,7 @@ class pyrandaIBM(pyrandaPackage):
         return val
 
 
-    def slip_velocity(self,SDF,gDx,gDy,gDz,v1_in,v2_in,v3_in,dx,new=False,phivar=None):
-
-        lens = dx * immersed_EPS    
+    def slip_velocity(self,SDF,gDx,gDy,gDz,v1_in,v2_in,v3_in,lens,new=False,phivar=None):
 
         v1 = v1_in*1.0
         v2 = v2_in*1.0
@@ -92,15 +86,13 @@ class pyrandaIBM(pyrandaPackage):
             v2 -= v2_phi
             v3 -= v3_phi
 
+        v1 = self.smooth_terrain(SDF,gDx,gDy,gDz,v1,0.0,new=new)
+        v2 = self.smooth_terrain(SDF,gDx,gDy,gDz,v2,0.0,new=new)
+        #v3 = self.smooth_terrain(SDF,gDx,gDy,gDz,v3,0.0,new=new)
             
-        norm = 0.0
-        v1 = self.smooth_terrain(SDF,gDx,gDy,gDz,v1,0.0,dx,new=new)
-        #v2 = self.smooth_terrain(SDF,gDx,gDy,gDz,v2,0.0,dx,new=new)
-        #v3 = self.smooth_terrain(SDF,gDx,gDy,gDz,v3,0.0,dx,new=new)
         norm = v1*gDx+v2*gDy+v3*gDy
-    
         vn =  numpy.where( SDF < lens, norm, 0.0 )
-        tmp = numpy.where( SDF < lens, 0.0 , norm/SDF )
+        tmp = numpy.where( SDF < lens, 0.0 , norm/(SDF) )            
     
         # Remove normal velocity
         v1 = v1 - vn*gDx
@@ -108,8 +100,7 @@ class pyrandaIBM(pyrandaPackage):
         v3 = v3 - vn*gDz
 
         # Compute linear velocity through zero level
-        tmp = self.smooth_terrain(SDF,gDx,gDy,gDz,tmp,lens,dx,new=new)
-        #tmp = smooth_terrain(SDF,gDx,gDy,tmp,lens,dx,dy)
+        tmp = self.smooth_terrain(SDF,gDx,gDy,gDz,tmp,lens,new=new)
         vn = numpy.where( SDF < lens, tmp*SDF, 0.0 )
     
         # Add velocity linear profile
@@ -122,11 +113,6 @@ class pyrandaIBM(pyrandaPackage):
             v2 += v2_phi
             v3 += v3_phi
 
-        
-        #import pdb
-        #pdb.set_trace()
-
-        
         return [v1,v2,0.0]
 
     

@@ -12,6 +12,8 @@ class pyrandaBC(pyrandaPackage):
         PackageName = 'BC'
         pyrandaPackage.__init__(self,PackageName,pysim)
 
+        self.bcList = {}
+        
 
     def get_sMap(self):
         sMap = {}
