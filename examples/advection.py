@@ -12,12 +12,21 @@ from pyranda.pyranda import pyrandaSim,pyrandaMPI,fortran3d
 from pyranda.pyrandaIBM import pyrandaIBM
 
 
+# Try to get args
+try:
+    Npts = int(sys.argv[1])
+except:
+    Npts = 100
+
+try:
+    test = bool(sys.argv[2])
+except:
+    test = False
+
 ## Define a mesh
-Npts = int( sys.argv[1] )
 L = numpy.pi * 2.0  
 Lp = L * (Npts-1.0) / Npts
 
-test = False
 
 mesh_options = {}
 mesh_options['type'] = 'cartesian'
