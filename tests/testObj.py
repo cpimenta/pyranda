@@ -18,6 +18,18 @@ def sexe(cmd,ret_output=False,echo = False):
         return subprocess.call(cmd,shell=True)
 
 
+def baseDict(string):
+    dbase = {}
+    # Make dictionary
+    for bb in string.split('\n'):
+        if bb:
+            name = bb.split('--')[0].strip()
+            diff = bb.split('--')[1].strip()
+            dbase[name] = diff
+    return dbase
+            
+
+    
 
 class testObj:
 
