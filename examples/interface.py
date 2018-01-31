@@ -9,8 +9,28 @@ from pyranda.pyranda import pyrandaSim,pyrandaMPI,fortran3d
 from pyranda.pyrandaIBM import pyrandaIBM
 
 
+# Try to get args
+try:
+    Npts = int(sys.argv[1])
+except:
+    Npts = 128
+
+#import pdb
+#pdb.set_trace()
+try:
+    test = bool(int(sys.argv[2]))
+except:
+    test = False
+
+try:
+    diffusive = bool(int(sys.argv[3]))
+except:
+    diffusive = False
+
+
+#print sys.argv[2]
+
 ## Define a mesh
-Npts = 128
 L = numpy.pi * 2.0  
 Lp = L * (Npts-1.0) / Npts
 twoD = False
@@ -69,8 +89,13 @@ dx = (x[1,0,0] - x[0,0,0])
 
 rad = numpy.sqrt( (x-numpy.pi)**2 ) # + (y-numpy.pi)**2 ) #+ (z-numpy.pi)**2  )
 
+diffAmp = 1.0
+if diffusive:
+    diffAmp = 1.0e6
+
+
 if not twoD:
-    ss.variables['rho'].data += ss.gfilter( numpy.where( x < numpy.pi*.25, 1.0e6, 1.0 ) )
+    ss.variables['rho'].data += ss.gfilter( numpy.where( x < numpy.pi*.25, diffAmp, 1.0 ) )
     ss.variables['rhoA'].data += 1.0e6 * (1.0 + .1*numpy.exp(-(x-numpy.pi*1.5)**2/.01)  )
     ss.variables['phi'].data = 3.14159 - x
     ss.variables['uA'].data += 1.0
@@ -139,11 +164,11 @@ while tt > time:
 
     # Poor man's boundary condition
     if not twoD:
-        ss.variables['rho'].data[0,:,:] = 1.0e6 + 1.0
+        ss.variables['rho'].data[0,:,:] = diffAmp
     
     ss.iprint("%s -- %s" % (cnt,time)  )
     cnt += 1
-    if viz:
+    if viz and (not test):
         v1 = ss.PyMPI.zbar( ss.variables['rhoA'].data )
         v2 = ss.PyMPI.zbar( ss.variables['rhoT'].data )
         v = ss.PyMPI.zbar( ss.variables['rho'].data )
@@ -166,4 +191,6 @@ while tt > time:
             #pdb.set_trace()
 
 
-
+v2 = ss.PyMPI.zbar( ss.variables['rhoT'].data )
+error = numpy.min( v2[Npts/2:,0] )
+ss.iprint( error )

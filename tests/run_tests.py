@@ -18,6 +18,7 @@ dbase = {}    # Dictionary of baselines
 
 # Add tests here
 execfile('test1DAdvection.py')
+execfile('testMM_simple.py')
 
 
 # Run tests
