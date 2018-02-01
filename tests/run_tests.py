@@ -21,6 +21,11 @@ execfile('test1DAdvection.py')
 execfile('testMM_simple.py')
 
 
+summary = ''
+passed = 0
+failed = 0
+new_baselines = ''
+
 # Run tests
 for test in tests:
 
@@ -48,17 +53,33 @@ for test in tests:
         if diff < 1.0e-4:
             testPass = True
             print 'Pass: (Rel. Error = %s )' % diff
-            print '%s -- %s' % (test.name,pout)
+            fout = '%s -- %s' % (test.name,pout)
+            print fout
+            passed += 1
         else:
             testPass = False
             print 'Fail: (Rel. Error = %s )' % diff
-            print '%s -- %s' % (test.name,pout)
+            fout = '%s -- %s' % (test.name,pout)
+            print fout
+            new_baselines += fout + '\n'
+            failed += 1
 
     except:
         testPass = False
         print 'Fail: (No baseline data found )'
-        print '%s -- %s' % (test.name,pout)
-            
+        fout = '%s -- %s' % (test.name,pout)
+        print fout
+        new_baselines += fout + '\n'
+        failed += 1
+
+print "\n\n\n=====Testing Summary======"
+print "Passed: %s" % passed
+print "Failed: %s" % failed
+
+print '\n\n\n===== New baselines ====='
+print new_baselines
+
+
 
     
         
