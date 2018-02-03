@@ -1,7 +1,8 @@
 # Run a bunch of test and check answers
 import os,sys
+import numpy as npy
 import subprocess
-
+import matplotlib.pyplot as plt
 
 def sexe(cmd,ret_output=False,echo = False):
     """ Helper for executing shell commands. """
@@ -28,9 +29,45 @@ def baseDict(string):
             dbase[name] = diff
     return dbase
             
+def checkScalar(baseline,pout):
+    diff = npy.abs( float(pout)-baseline ) / npy.abs( baseline )
+
+    return diff
+
+
+def checkProfile( baseline, pout ):
+
+    baseline = 'baselines/%s' % baseline
+
+    base = npy.loadtxt( baseline )
+    test = npy.loadtxt( pout )
+
+    diff = npy.abs( base[1,:] - test[1,:] ) / npy.max( npy.abs( base[1,:] ) )
+
+    m_diff = npy.max( diff )
+
+        
+    return m_diff
+
+def plotError( baseline, pout ):
+
+    baseline = 'baselines/%s' % baseline
+
+    base = npy.loadtxt( baseline )
+    test = npy.loadtxt( pout )
+
+    diff = npy.abs( base[1,:] - test[1,:] ) / npy.max( npy.abs( base[1,:] ) )
+    
+    plt.figure()
+    plt.plot([1,2,3])
+    plt.subplot(121)
+    plt.plot(base[0,:],base[1,:],'k-')
+    plt.plot(test[0,:],test[1,:],'b-')
+
+    plt.subplot(122)
+    plt.plot(base[0,:],diff,'r-')
 
     
-
 class testObj:
 
     def __init__(self,name):

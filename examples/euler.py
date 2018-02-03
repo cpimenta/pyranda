@@ -8,13 +8,34 @@ from pyranda.pyranda import pyrandaSim,pyrandaMPI,fortran3d
 from pyranda.pyrandaIBM import pyrandaIBM
 from pyranda.pyrandaBC  import pyrandaBC
 
-## Define a mesh
-Npts = 128
-L = numpy.pi * 2.0  
-dim = 2
-gamma = 1.4
 
-problem = 'linear'
+
+# Try to get args for testing
+try:
+    Npts = int(sys.argv[1])
+except:
+    Npts = 128
+
+#import pdb
+#pdb.set_trace()
+try:
+    test = bool(int(sys.argv[2]))
+except:
+    test = False
+
+try:
+    testName = (sys.argv[3])
+except:
+    testName = None
+
+
+
+
+## Define a mesh
+L = numpy.pi * 2.0  
+gamma = 1.4
+dim = 2
+
 problem = 'sod'
 
 Lp = L * (Npts-1.0) / Npts
@@ -51,7 +72,7 @@ ddt(:Et:)   =  -ddx( (:Et: + :p: - :tau:)*:u: ) - ddy( (:Et: + :p: - :tau:)*:v: 
 :p:         =  ( :Et: - .5*:rho:*(:u:*:u: + :v:*:v:) ) * ( :gamma: - 1.0 )
 # Artificial bulk viscosity (old school way)
 :div:       =  ddx(:u:) + ddy(:v:)
-:beta:      =  gbar(abs(lap(lap(:div:))))*:dx6: * :rho: * 0.2
+:beta:      =  gbar(abs(lap(lap(:div:))))*:dx6: * :rho: * 0.20
 :tau:       =  :beta:*:div:
 # Apply constant BCs
 bc.extrap(['rho','Et'],['x1','xn','y1','yn'])
@@ -107,11 +128,12 @@ viz = True
 # Approx a max dt and stopping time
 v = 1.0
 dt_max = v / ss.mesh.nn[0] * 0.75
-tt = L/v * .25 #dt_max
+tt = L/v * .125 #dt_max
 
 # Mesh for viz on master
 xx   =  ss.PyMPI.zbar( x )
 yy   =  ss.PyMPI.zbar( y )
+ny = ss.PyMPI.ny
 
 # Start time loop
 dt = dt_max
@@ -128,12 +150,11 @@ while tt > time:
     # Print some output
     ss.iprint("%s -- %s" % (cnt,time)  )
     cnt += 1
-    if viz:
+    if viz and (not test):
         v = ss.PyMPI.zbar( ss.variables[pvar].data )
         if (ss.PyMPI.master and (cnt%viz_freq == 1)) and True:
             plt.figure(1)
             plt.clf()
-            ny = ss.PyMPI.ny
             if ( ny > 1):
                 plt.plot(xx[:,ny/2],v[:,ny/2] ,'k.-')
                 plt.title(pvar)
@@ -147,4 +168,10 @@ while tt > time:
             plt.pause(.001)
 
 
-
+if test:
+    v = ss.PyMPI.zbar( ss.variables[pvar].data )
+    v1d =  v[:,ny/2]
+    x1d = xx[:,ny/2]
+    fname = testName + '.dat'
+    numpy.savetxt( fname  , (x1d,v1d) )
+    print fname

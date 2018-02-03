@@ -19,12 +19,14 @@ dbase = {}    # Dictionary of baselines
 # Add tests here
 execfile('test1DAdvection.py')
 execfile('testMM_simple.py')
+execfile('test2deuler.py')
 
 
 summary = ''
 passed = 0
 failed = 0
 new_baselines = ''
+
 
 # Run tests
 for test in tests:
@@ -45,11 +47,21 @@ for test in tests:
 
     out = sexe(cmd,ret_output=True,echo=False)
     pout = out[1].split('\n')[-2]
-
+    curve = False
+    if '.dat' in pout:
+        curve = True
+    
     # Diff against baseline
     try:
-        baseline = float(dbase[test.name])
-        diff = npy.abs( float(pout)-baseline ) / npy.abs( baseline )
+        baseline = dbase[test.name]
+
+        if curve:
+            # Check curve
+            diff = checkProfile( baseline, pout)
+        else:
+            # Check if scalar compare    
+            diff = checkScalar( float(baseline) , pout)
+
         if diff < 1.0e-4:
             testPass = True
             print 'Pass: (Rel. Error = %s )' % diff
@@ -63,6 +75,11 @@ for test in tests:
             print fout
             new_baselines += fout + '\n'
             failed += 1
+
+            if curve:
+                plotError( baseline, pout )
+            
+            
 
     except:
         testPass = False
@@ -79,7 +96,7 @@ print "Failed: %s" % failed
 print '\n\n\n===== New baselines ====='
 print new_baselines
 
-
+plt.show()
 
     
         
