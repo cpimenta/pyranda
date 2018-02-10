@@ -144,7 +144,7 @@ yy   =  ss.PyMPI.zbar( y )
 # Start time loop
 cnt = 1
 viz_freq = 15
-pvar = 'u'
+pvar = 'p'
 
 #import pdb
 #pdb.set_trace()

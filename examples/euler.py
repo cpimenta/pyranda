@@ -168,6 +168,8 @@ while tt > time:
             plt.pause(.001)
 
 
+
+# Curve test.  Write file and print its name at the end
 if test:
     v = ss.PyMPI.zbar( ss.variables[pvar].data )
     v1d =  v[:,ny/2]

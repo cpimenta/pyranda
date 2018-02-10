@@ -30,8 +30,10 @@ def baseDict(string):
     return dbase
             
 def checkScalar(baseline,pout):
-    diff = npy.abs( float(pout)-baseline ) / npy.abs( baseline )
-
+    if abs(baseline) > 0.0:
+        diff = npy.abs( float(pout)-baseline ) / npy.abs( baseline )
+    else:
+        diff = npy.abs( float(pout)-baseline )
     return diff
 
 

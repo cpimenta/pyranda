@@ -20,6 +20,7 @@ dbase = {}    # Dictionary of baselines
 execfile('test1DAdvection.py')
 execfile('testMM_simple.py')
 execfile('test2deuler.py')
+execfile('testHeat1D.py')
 
 
 summary = ''
