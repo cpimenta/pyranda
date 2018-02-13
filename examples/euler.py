@@ -74,11 +74,19 @@ ddt(:Et:)   =  -ddx( (:Et: + :p: - :tau:)*:u: ) - ddy( (:Et: + :p: - :tau:)*:v: 
 :div:       =  ddx(:u:) + ddy(:v:)
 :beta:      =  gbar(abs(lap(lap(:div:))))*:dx6: * :rho: * 0.20
 :tau:       =  :beta:*:div:
-# Apply constant BCs
+"""
+if dim == 2:
+    eom += """# Apply constant BCs
 bc.extrap(['rho','Et'],['x1','xn','y1','yn'])
 bc.const(['u','v'],['x1','xn','y1','yn'],0.0)
 """
+else:
+    eom += """# Apply constant BCs
+bc.extrap(['rho','Et'],['x1'])
+bc.const(['u','v'],['x1','xn'],0.0)
+"""
 
+print eom
 
 # Add the EOM to the solver
 ss.EOM(eom)

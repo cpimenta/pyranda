@@ -43,7 +43,6 @@ ss.addPackage( pyrandaBC(ss) )
 eom = """
 # Heat equation
 ddt(:phi:)  =  :c: * lap(:phi:)
-#:c: = :phi:**2.0
 # Boundary condition
 bc.const(['phi'],['x1'],2.0)
 bc.const(['phi'],['xn'],1.0)
@@ -53,7 +52,7 @@ ss.EOM(eom)
 # Initialize variables
 ic = """
 xnn = :x:[-1,0,0]
-:phi: = 1.0 + 1.0*(xnn - :x:)/xnn
+:phi: = 1.0 + 0.0*(xnn - :x:)/xnn
 :c:   = 1.0
 """
 ss.setIC(ic)
@@ -88,7 +87,7 @@ while tt > time:
 
     cnt += 1
     if viz:
-        if (ss.PyMPI.master and (cnt%5 == 0)) and (not test):
+        if (ss.PyMPI.master and (cnt%50 == 0)) and (not test):
             plt.figure(1)
             plt.clf()
 
