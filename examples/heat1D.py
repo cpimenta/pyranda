@@ -52,7 +52,7 @@ ss.EOM(eom)
 # Initialize variables
 ic = """
 xnn = :x:[-1,0,0]
-:phi: = 1.0 + 0.0*(xnn - :x:)/xnn
+:phi: = 1.0 + 1.0*(xnn - :x:)/xnn
 :c:   = 1.0
 """
 ss.setIC(ic)
