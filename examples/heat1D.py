@@ -4,7 +4,7 @@ import re
 import sys
 import time
 import matplotlib.pyplot as plt
-from pyranda.pyranda import pyrandaSim,pyrandaMPI,fortran3d
+from pyranda.pyranda import pyrandaSim
 from pyranda.pyrandaIBM import pyrandaIBM
 from pyranda.pyrandaBC  import pyrandaBC
 
