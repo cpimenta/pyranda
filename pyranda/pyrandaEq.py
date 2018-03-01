@@ -1,4 +1,5 @@
 from pyrandaUtils import *
+from pyrandaVar import *
 
         
 class pyrandaEq:
@@ -24,9 +25,8 @@ class pyrandaEq:
             Srhs = fortran3d( self.eqstr.split('=')[1] , sMap)
         else:
             Srhs = fortran3d( self.eqstr , sMap)
+        print Srhs
         self.RHS = eval( 'lambda self: ' + Srhs )
 
         
-        # Check to see if this is conserved PDE
-        if ( 'ddt(' in eqstr ):
-            self.kind = 'PDE'
+       

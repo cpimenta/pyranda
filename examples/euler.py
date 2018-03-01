@@ -93,16 +93,16 @@ ss.EOM(eom)
 
 
 # Initialize variables
-ic = "rad = sqrt( (:x:-numpy.pi)**2  ) "
+ic = ":rad: = sqrt( (:x:-numpy.pi)**2  ) "
 if dim == 2:
-    ic = "rad = sqrt( (:x:-numpy.pi)**2  +  (:y:-numpy.pi)**2 ) "
+    ic = ":rad: = sqrt( (:x:-numpy.pi)**2  +  (:y:-numpy.pi)**2 ) "
 
 # Linear wave propagation in 1d and 2d
 if (problem == 'linear'):
     pvar = 'p'
     ic += """
     :gamma: = 1.4
-    ratio = 1.0 + 0.01 * exp( -(rad)**2/(.2**2) )
+    :ratio: = 1.0 + 0.01 * exp( -(:rad:)**2/(.2**2) )
     :Et: = ratio
     :rho: = 1.0
     """
@@ -111,11 +111,11 @@ if (problem == 'linear'):
 if (problem == 'sod'):
     pvar = 'rho'
     if dim == 1:
-        ic = 'rad = :x: / 2.0'
+        ic = ':rad: = :x: / 2.0'
     ic += """
     :gamma: = 1.4
-    :Et:  = gbar( where( rad < :pi:/2.0, 1.0/(:gamma:-1.0) , .1 /(:gamma:-1.0) ) )
-    :rho: = gbar( where( rad < :pi:/2.0, 1.0    , .125 ) )
+    :Et:  = gbar( where( :rad: < :pi:/2.0, 1.0/(:gamma:-1.0) , .1 /(:gamma:-1.0) ) )
+    :rho: = gbar( where( :rad: < :pi:/2.0, 1.0    , .125 ) )
     """
 
 # Set the initial conditions
@@ -123,10 +123,10 @@ ss.setIC(ic)
     
 # Length scale for art. viscosity
 # Initialize variables
-x = ss.mesh.coords[0]
-y = ss.mesh.coords[1]
-z = ss.mesh.coords[2]
-ss.variables['dx6'].data += (x[1,0,0] - x[0,0,0])**6
+x = ss.mesh.coords[0].data[0]
+y = ss.mesh.coords[1].data[0]
+z = ss.mesh.coords[2].data[0]
+ss.variables['dx6'].pydata.data[0] += (x[1,0,0] - x[0,0,0])**6
 
 
 # Write a time loop
@@ -157,13 +157,14 @@ while tt > time:
     
     # Print some output
     ss.iprint("%s -- %s" % (cnt,time)  )
+
     cnt += 1
     if viz and (not test):
-        v = ss.PyMPI.zbar( ss.variables[pvar].data )
-        if (ss.PyMPI.master and (cnt%viz_freq == 1)) and True:
+        v = ss.zbar( pvar )
+        if (ss.PyMPI.master and (cnt%viz_freq == 0)) and True:
             plt.figure(1)
             plt.clf()
-            if ( ny > 1):
+            if ( ny > 1) and False:
                 plt.plot(xx[:,ny/2],v[:,ny/2] ,'k.-')
                 plt.title(pvar)
                 plt.pause(.001)
@@ -171,7 +172,7 @@ while tt > time:
                 plt.clf()            
                 plt.contourf( xx,yy,v ,64 , cmap=cm.jet)
             else:
-                plt.plot(xx[:,0],v[:,0] ,'k.-')
+                plt.plot(xx[:,ny/2],v[:,ny/2] ,'k.-')
             plt.title(pvar)
             plt.pause(.001)
 
@@ -179,7 +180,7 @@ while tt > time:
 
 # Curve test.  Write file and print its name at the end
 if test:
-    v = ss.PyMPI.zbar( ss.variables[pvar].data )
+    v = ss.zbar( pvar )
     v1d =  v[:,ny/2]
     x1d = xx[:,ny/2]
     fname = testName + '.dat'

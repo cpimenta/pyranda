@@ -7,6 +7,7 @@ from pyrandaPackage import pyrandaPackage
 
 
 
+
 immersed_iter = 2
 immersed_CFL = 0.5
 immersed_EPS = 0.1
@@ -28,18 +29,20 @@ class pyrandaIBM(pyrandaPackage):
                  
     def ibmVel(self,vel,phi,gphi,phivar=None):
 
-        u = vel[0]
-        v = vel[1]
-        w = vel[2]
+        u = vel[0].data[0]
+        v = vel[1].data[0]
+        w = vel[2].data[0]
     
-        phix = gphi[0]
-        phiy = gphi[1]
-        phiz = gphi[2]
+        phix = gphi[0].data[0]
+        phiy = gphi[1].data[0]
+        phiz = gphi[2].data[0]
 
         lens = self.pyranda.PyMPI.dx * immersed_EPS
     
-        return self.slip_velocity( phi ,phix,phiy,phiz,
-                                   u,v,w,lens,new=False,phivar=phivar)
+        [up,vp,wp] = self.slip_velocity( phi ,phix,phiy,phiz,
+                                         u,v,w,lens,new=False,phivar=phivar)
+        
+        
     
     def ibmS(self,scalar,phi,gphi):
         

@@ -77,8 +77,17 @@ class pyrandaMPI():
                 self.ynproc = True
 
 
+    # Data initializers for scalars, vectors, and tensors
     def emptyScalar(self):
         return numpy.empty( self.chunk_3d_size, dtype=numpy.float64, order='F')*0.0
+
+    def emptyVector(self):
+        return [ self.emptyScalar(), self.emptyScalar(), self.emptyScalar() ]
+
+    def emptyTensor(self):
+        return [ self.emptyVector(), self.emptyVector(), self.emptyVector() ]
+    
+    
 
     
     def gather2D(self,idata,com,n1,n2,g1,g2):
@@ -140,6 +149,7 @@ class pyrandaMPI():
                            [self.chunk_3d_lo[2] , self.chunk_3d_hi[2]])
     
     def zbar(self,data):
+
         return self.sum2D( data, self.comm,self.nx,self.ny,2,
                            [self.chunk_3d_lo[0],self.chunk_3d_hi[0]+1 ],
                            [self.chunk_3d_lo[1],self.chunk_3d_hi[1]+1 ])

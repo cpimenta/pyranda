@@ -13,7 +13,21 @@ def fortran3d(form,sMap):
     for ivar in varList:
         kvar = '%s%s%s' % (keyS,ivar,keyS)
         if kvar not in sMap:
-            sMap[kvar] = 'self.variables["%s"].data'%ivar
+            #sMap[kvar] = 'self.variables["%s"].data'%ivar
+            sMap[kvar] = 'self.variables["%s"].pydata'%ivar
+
+    # HACK... debugging
+    #keyS = '@'
+    #varList = findVar(form,keyS)
+    #for ivar in varList:
+    #    kvar = '%s%s%s' % (keyS,ivar,keyS)
+    #    if kvar not in sMap:
+    #        sMap[kvar] = 'self.variables["%s"].pydata.get()'%ivar
+
+    #import pdb
+    #pdb.set_trace()
+
+
     #
     for mvar in sMap:
         form = form.replace(mvar,sMap[mvar])

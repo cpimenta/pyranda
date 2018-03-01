@@ -40,18 +40,25 @@ mesh_options['nn'] = [ Npts, 1 ,  1  ]
 ss = pyrandaSim('advection',mesh_options)
 
 # Define the equations of motion
-ss.EOM(" ddt(:phi:)  =  -:c: * ddx(:phi:) ")
+#ss.EOM(" ddt(:phi:)  =  -:c: * ddx(@phi@) ")
+eom = """
+vec(:u:)
+ddt(:phi:)  =  -:c: * ddx(:phi:) 
+
+"""
+ss.EOM(eom)
 
 # Initialize variables
 ic = """
-rad   = sqrt( (:x:-:pi:)**2  )
-:phi: = 1.0 + 0.1 * exp( -(rad/(:pi:/4.0))**2 )
+:rad:   = sqrt( (:x:-:pi:)**2  )
+:phi: = 1.0 + 0.1 * exp( -(:rad:/(:pi:/4.0))**2 )
 :phi2: = :phi:*1.0
 :c:   = 1.0
 """
+
 ss.setIC(ic)
 
-x  = ss.mesh.coords[0]
+x  = ss.mesh.coords[0].data[0]
 xx =  ss.PyMPI.zbar( x )
 
 # Time step size
@@ -76,16 +83,18 @@ while tt > time:
     # Plot animation of advection
     cnt += 1
     if viz:
-        v = ss.PyMPI.zbar( ss.variables['phi'].data )
+        v = ss.zbar('phi')
+        v2 = ss.zbar( 'phi' )
         if (ss.PyMPI.master and (cnt%5 == 0)) and (not test):
             plt.figure(1)
             plt.clf()
             plt.plot(xx[:,0],v[:,0] ,'k.-')
+            plt.plot(xx[:,0],v2[:,0] ,'b-')
             plt.pause(.001)
 
 
-phi = ss.variables['phi'].data
-phi2 = ss.variables['phi2'].data
+phi = ss.var('phi')
+phi2 = ss.var('phi2')
 error = numpy.sum( (phi-phi2)**2  )
 ss.iprint( error ) 
             

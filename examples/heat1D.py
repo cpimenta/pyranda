@@ -51,13 +51,13 @@ ss.EOM(eom)
 
 # Initialize variables
 ic = """
-xnn = :x:[-1,0,0]
-:phi: = 1.0 + 1.0*(xnn - :x:)/xnn
+:xnn: = :x:.data[0][-1,0,0]
+:phi: = 1.0 + 1.0*(:xnn: - :x:)/:xnn:
 :c:   = 1.0
 """
 ss.setIC(ic)
 
-x  = ss.mesh.coords[0]
+x  = ss.mesh.coords[0].data[0]
 xx =  ss.PyMPI.zbar( x )
 
 # Time step size
@@ -81,7 +81,7 @@ while tt > time:
     # Plot animation of advection
     xnn = xx[-1,0]
     anl = 1.0 + 1.0*(xnn - xx)/xnn
-    v = ss.PyMPI.zbar( ss.variables['phi'].data )
+    v = ss.zbar( 'phi' )
     
     error = numpy.abs( anl - v )
 

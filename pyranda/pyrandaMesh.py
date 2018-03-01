@@ -1,4 +1,5 @@
-import numpy 
+import numpy
+from pyrandaVar import *
 
 
 class pyrandaMesh:
@@ -43,9 +44,16 @@ class pyrandaMesh:
             x, y, z = numpy.meshgrid(x, y, z, indexing='ij')
 
             self.coords = [0]*3
-            self.coords[0] = numpy.asfortranarray( x )
-            self.coords[1] = numpy.asfortranarray( y )
-            self.coords[2] = numpy.asfortranarray( z )
+            #self.coords[0] = numpy.asfortranarray( x )
+            #self.coords[1] = numpy.asfortranarray( y )
+            #self.coords[2] = numpy.asfortranarray( z )
+            self.coords[0] = pyrandaData( 1, self.PyMPI)
+            self.coords[0].data[0] = x
+            self.coords[1] = pyrandaData( 1, self.PyMPI)
+            self.coords[1].data[0] = y
+            self.coords[2] = pyrandaData( 1, self.PyMPI)
+            self.coords[2].data[0] = z
+            
 
-            self.shape = list(self.coords[0].shape)
+            self.shape = list(self.coords[0].data[0].shape)
 

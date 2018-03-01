@@ -123,11 +123,11 @@ ss.setIC(ic)
     
 # Length scale for art. viscosity
 # Initialize variables
-x = ss.mesh.coords[0]
-y = ss.mesh.coords[1]
-z = ss.mesh.coords[2]
+x = ss.mesh.coords[0].data[0]
+y = ss.mesh.coords[1].data[0]
+z = ss.mesh.coords[2].data[0]
 dx = (x[1,0,0] - x[0,0,0])
-ss.variables['dx6'].data += dx**6
+ss.variables['dx6'].pydata.data[0] += dx**6
 
 
 # Write a time loop

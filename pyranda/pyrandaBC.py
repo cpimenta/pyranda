@@ -41,21 +41,26 @@ class pyrandaBC(pyrandaPackage):
     def extrapolate(self,var,direction):
         # Direction switch
         bcvar = None
+        pdat = self.pyranda.variables[var].pydata
         if direction == 'x1':
             if self.pyranda.PyMPI.x1proc:
-                self.pyranda.variables[var].data[0,:,:] = self.pyranda.variables[var].data[1,:,:]
+                for dd in range(pdat.rank):
+                    pdat.data[dd][0,:,:] = pdat.data[dd][1,:,:]
 
         if direction == 'xn':
             if self.pyranda.PyMPI.xnproc:
-                self.pyranda.variables[var].data[-1,:,:] = self.pyranda.variables[var].data[-2,:,:]
+                for dd in range(pdat.rank):
+                    pdat.data[dd][-1,:,:] = pdat.data[dd][-2,:,:]
 
         if direction == 'y1':
             if self.pyranda.PyMPI.y1proc:
-                self.pyranda.variables[var].data[:,0,:] = self.pyranda.variables[var].data[:,1,:]
+                for dd in range(pdat.rank):
+                    pdat.data[dd][:,0,:] = pdat.data[dd][:,1,:]
 
         if direction == 'yn':
             if self.pyranda.PyMPI.ynproc:
-                self.pyranda.variables[var].data[:,-1,:] = self.pyranda.variables[var].data[:,-2,:]
+                for dd in range(pdat.rank):
+                    pdat.data[dd][:,-1,:] = pdat.data[dd][:,-2,:]
 
                 
     def const(self,var,direction,val):
@@ -73,25 +78,31 @@ class pyrandaBC(pyrandaPackage):
                 
     def constant(self,var,direction,val):
 
+        pdat = self.pyranda.variables[var].pydata
+        
         # Direction switch
         if direction == 'x1':
             if self.pyranda.PyMPI.x1proc:
-                self.pyranda.variables[var].data[0,:,:] = val
+                for dd in range(pdat.rank):
+                    pdat.data[dd][0,:,:] = val
                 
             
         if direction == 'xn':
             if self.pyranda.PyMPI.xnproc:
-                self.pyranda.variables[var].data[-1,:,:] = val
+                for dd in range(pdat.rank):
+                    pdat.data[dd][-1,:,:] = val
             
 
         if direction == 'y1':
             if self.pyranda.PyMPI.y1proc:
-                self.pyranda.variables[var].data[:,0,:] = val
+                for dd in range(pdat.rank):
+                    pdat.data[dd][:,0,:] = val
                 
             
         if direction == 'yn':
             if self.pyranda.PyMPI.ynproc:
-                self.pyranda.variables[var].data[:,-1,:] = val
+                for dd in range(pdat.rank):
+                    pdat.data[dd][:,-1,:] = val
             
             
         
