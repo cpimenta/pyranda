@@ -4,6 +4,11 @@ import sys
 import time
 import matplotlib.pyplot as plt
 from matplotlib import cm
+
+sys.path.append('../')
+sys.path.append('../../python_tools/compact-light')
+sys.path.append('../../python_tools/compac-light/mpi4py/install/lib/python2.7/site-packages')
+
 from pyranda.pyranda import pyrandaSim
 from pyranda.pyrandaIBM import pyrandaIBM
 from pyranda.pyrandaBC  import pyrandaBC
@@ -72,7 +77,8 @@ ddt(:Et:)   =  -ddx( (:Et: + :p: - :tau:)*:u: ) - ddy( (:Et: + :p: - :tau:)*:v: 
 :p:         =  ( :Et: - .5*:rho:*(:u:*:u: + :v:*:v:) ) * ( :gamma: - 1.0 )
 # Artificial bulk viscosity (old school way)
 :div:       =  ddx(:u:) + ddy(:v:)
-:beta:      =  gbar(abs(lap(lap(:div:))))*:dx6: * :rho: * 0.20
+#:beta:      =  gbar(abs(lap(lap(:div:))))*:dx6: * :rho: * 0.20
+:beta:      =  gbar(abs(ring(:div:)))*:dx2: * :rho: * 1.0
 :tau:       =  :beta:*:div:
 """
 if dim == 2:
@@ -126,7 +132,8 @@ ss.setIC(ic)
 x = ss.mesh.coords[0]
 y = ss.mesh.coords[1]
 z = ss.mesh.coords[2]
-ss.variables['dx6'].data += (x[1,0,0] - x[0,0,0])**6
+#ss.variables['dx6'].data += (x[1,0,0] - x[0,0,0])**6
+ss.variables['dx2'].data += (x[1,0,0] - x[0,0,0])**2
 
 
 # Write a time loop

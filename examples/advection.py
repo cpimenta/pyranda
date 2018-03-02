@@ -4,7 +4,10 @@ import re
 import sys
 import time
 #sys.path.append('/Users/olson45/Research/FloATPy')
-#sys.path.append('../pyranda')
+sys.path.append('../')
+sys.path.append('../../python_tools/compact-light')
+sys.path.append('../../python_tools/compac-light/mpi4py/install/lib/python2.7/site-packages')
+
 
 import matplotlib.pyplot as plt
 from pyranda.pyranda import pyrandaSim
@@ -37,6 +40,8 @@ mesh_options['xn'] = [ Lp   , Lp    ,  Lp ]
 mesh_options['nn'] = [ Npts, 1 ,  1  ]
 
 # Initialize a simulation object on a mesh
+#import pdb
+#pdb.set_trace()
 ss = pyrandaSim('advection',mesh_options)
 
 # Define the equations of motion

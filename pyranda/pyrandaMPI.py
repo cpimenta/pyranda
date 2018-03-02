@@ -3,78 +3,152 @@ import numpy
 import re
 import sys
 import time
-sys.path.append('/Users/olson45/Research/FloATPy')
 
-from floatpy.parallel import t3dmod
-from floatpy.derivatives.compact import CompactDerivative
-from floatpy.filters.filter import Filter                
+
+#sys.path.append('/Users/olson45/Research/FloATPy')
+#from floatpy.parallel import t3dmod
+#from floatpy.derivatives.compact import CompactDerivative
+#from floatpy.filters.filter import Filter                
             
+import parcop
+
+
 class pyrandaMPI():
 
-    def __init__(self,nx,ny,nz,dx,dy,dz,periodic):
+    #def __init__(self,nx,ny,nz,dx,dy,dz,periodic):
+    def __init__(self,meshOptions):
 
-            self.nx = nx
-            self.ny = ny
-            self.nz = nz
-
-            self.dx = dx
-            self.dy = dy
-            self.dz = dz
-
-            self.comm  = MPI.COMM_WORLD
-            self.fcomm = self.comm.py2f()
-            self.periodic = periodic
-
-            self.order = (10,10,10)
-            self.filter_type = ('compact', 'compact', 'compact')
-
-            self.grid_partition = t3dmod.t3d(self.fcomm,
-                                             self.nx,self.ny,self.nz,
-                                             self.periodic)
-
-            self.chunk_3d_size = numpy.zeros(3, dtype=numpy.int32, order='F')
-            self.chunk_3d_lo   = numpy.zeros(3, dtype=numpy.int32, order='F')
-            self.chunk_3d_hi   = numpy.zeros(3, dtype=numpy.int32, order='F')
-            self.grid_partition.get_sz3d(self.chunk_3d_size)
-            self.grid_partition.get_st3d(self.chunk_3d_lo)
-            self.grid_partition.get_en3d(self.chunk_3d_hi)
-            self.chunk_3d_lo = self.chunk_3d_lo - 1 # Convert to 0 based indexing
-            self.chunk_3d_hi = self.chunk_3d_hi - 1 # Convert to 0 based indexing
-
-            # Set up comms
-            self.xcom  = MPI.Comm.f2py( self.grid_partition.commx () )
-            self.ycom  = MPI.Comm.f2py( self.grid_partition.commy () )
-            self.zcom  = MPI.Comm.f2py( self.grid_partition.commz () )
-            self.xycom = MPI.Comm.f2py( self.grid_partition.commxy() )
-            self.yzcom = MPI.Comm.f2py( self.grid_partition.commyz() )
-            self.xzcom = MPI.Comm.f2py( self.grid_partition.commxz() )
+        self.nx = meshOptions['nn'][0]
+        self.ny = meshOptions['nn'][1]
+        self.nz = meshOptions['nn'][2]
+        
+        x1 = meshOptions['x1'][0]
+        xn = meshOptions['xn'][0]
+        y1 = meshOptions['x1'][1]
+        yn = meshOptions['xn'][1]
+        z1 = meshOptions['x1'][2]
+        zn = meshOptions['xn'][2]
+        
+        dx = (meshOptions['xn'][0]-meshOptions['x1'][0])/max(self.nx-1,1)
+        dy = (meshOptions['xn'][1]-meshOptions['x1'][1])/max(self.ny-1,1)
+        dz = (meshOptions['xn'][2]-meshOptions['x1'][2])/max(self.nz-1,1)
+        self.dx = dx
+        self.dy = dy
+        self.dz = dz
+        
+        periodic = meshOptions['periodic']
+        self.periodic = periodic
+        
+        self.comm  = MPI.COMM_WORLD
+        self.fcomm = self.comm.py2f()
             
-            self.der = CompactDerivative(self.grid_partition,
-                                         (self.dx, self.dy, self.dz),
-                                         self.order, self.periodic)
+            
+        self.order = (10,10,10)
+        self.filter_type = ('compact', 'compact', 'compact')
+        
+        px = 1
+        py = 1
+        pz = 1
+        bx1 = "NONE"
+        bxn = "NONE"
+        by1 = "NONE"#"PERI"
+        byn = "NONE"#"PERI"
+        bz1 = "NONE"#"PERI"
+        bzn = "NONE"#"PERI"
+        if periodic[0]:
+            bx1 = "PERI"
+            bxn = "PERI"
+        if periodic[1]:
+            by1 = "PERI"
+            byn = "PERI"
+        if periodic[2]:
+            bz1 = "PERI"
+            bzn = "PERI"
+        
 
-            self.fil = Filter( self.grid_partition, self.filter_type, periodic_dimensions=self.periodic )
-            self.gfil = Filter( self.grid_partition, ('gaussian','gaussian','gaussian'), periodic_dimensions=self.periodic ) 
-            self.master = False
-            if self.comm.rank == 0:
-                self.master = True
+        parcop.parcop.setup( 0, 0 , self.fcomm, self.nx,self.ny,self.nz, 
+                             px , py, pz, x1,xn,y1,yn,
+                             z1,zn,bx1,bxn,by1,byn,
+                             bz1,bzn)
+        
+            #self.grid_partition = t3dmod.t3d(self.fcomm,
+            #                                 self.nx,self.ny,self.nz,
+            #                                 self.periodic)
+
+        self.chunk_3d_size = numpy.zeros(3, dtype=numpy.int32, order='F')
+        self.chunk_3d_lo   = numpy.zeros(3, dtype=numpy.int32, order='F')
+        self.chunk_3d_hi   = numpy.zeros(3, dtype=numpy.int32, order='F')
+        
+            #self.grid_partition.get_sz3d(self.chunk_3d_size)
+            #self.grid_partition.get_st3d(self.chunk_3d_lo)
+            #self.grid_partition.get_en3d(self.chunk_3d_hi)
+
+            
+        # Set up comms
+        #self.xcom  = MPI.Comm.f2py( self.grid_partition.commx () )
+        #self.ycom  = MPI.Comm.f2py( self.grid_partition.commy () )
+        #self.zcom  = MPI.Comm.f2py( self.grid_partition.commz () )
+        #self.xycom = MPI.Comm.f2py( self.grid_partition.commxy() )
+        #self.yzcom = MPI.Comm.f2py( self.grid_partition.commyz() )
+        #self.xzcom = MPI.Comm.f2py( self.grid_partition.commxz() )
+        self.xcom  = MPI.Comm.f2py( parcop.parcop.commx (0,0) ) 
+        self.ycom  = MPI.Comm.f2py( parcop.parcop.commy (0,0) )
+        self.zcom  = MPI.Comm.f2py( parcop.parcop.commz (0,0) )
+        self.xycom = MPI.Comm.f2py( parcop.parcop.commxy(0,0) )
+        self.yzcom = MPI.Comm.f2py( parcop.parcop.commyz(0,0) )
+        self.xzcom = MPI.Comm.f2py( parcop.parcop.commxz(0,0) )
+
+            
+
+        self.chunk_3d_size[0] = self.nx / px
+        self.chunk_3d_size[1] = self.ny / py
+        self.chunk_3d_size[2] = self.nz / pz
+
+        self.chunk_3d_lo[0] = self.xcom.rank     * self.chunk_3d_size[0] + 1
+        self.chunk_3d_hi[0] = (self.xcom.rank+1) * self.chunk_3d_size[0]
+
+        self.chunk_3d_lo[1] = self.ycom.rank     * self.chunk_3d_size[1] + 1
+        self.chunk_3d_hi[1] = (self.ycom.rank+1) * self.chunk_3d_size[1]
+            
+        self.chunk_3d_lo[2] = self.zcom.rank     * self.chunk_3d_size[2] + 1
+        self.chunk_3d_hi[2] = (self.zcom.rank+1) * self.chunk_3d_size[2]
+
+        self.chunk_3d_lo = self.chunk_3d_lo - 1 # Convert to 0 based indexing
+        self.chunk_3d_hi = self.chunk_3d_hi - 1 # Convert to 0 based indexing
 
 
-            self.x1proc = False
-            if self.xcom.rank == 0:
-                self.x1proc = True
 
-            self.xnproc = False
-            if self.xcom.rank == self.xcom.size - 1:
-                self.xnproc = True
+            # Replace these objects with parcop ones
+            #self.der = CompactDerivative(self.grid_partition,
+            #(self.dx, self.dy, self.dz),
+            #                             self.order, self.periodic)
+            #self.fil = Filter( self.grid_partition, self.filter_type, periodic_dimensions=self.periodic )
+            #self.gfil = Filter( self.grid_partition, ('gaussian','gaussian','gaussian'), periodic_dimensions=self.periodic ) 
 
-            self.y1proc = False
-            if self.ycom.rank == 0:
-                self.y1proc = True
+        self.der  = parcop_der()
+        self.fil  = parcop_sfil()
+        self.gfil = parcop_gfil()
 
-            self.ynproc = False
-            if self.ycom.rank == self.ycom.size - 1:
-                self.ynproc = True
+        self.master = False
+        if self.comm.rank == 0:
+            self.master = True
+
+
+        self.x1proc = False
+        if self.xcom.rank == 0:
+            self.x1proc = True
+
+        self.xnproc = False
+        if self.xcom.rank == self.xcom.size - 1:
+            self.xnproc = True
+
+        self.y1proc = False
+        if self.ycom.rank == 0:
+            self.y1proc = True
+
+        self.ynproc = False
+        if self.ycom.rank == self.ycom.size - 1:
+            self.ynproc = True
 
 
     def emptyScalar(self):
@@ -144,3 +218,56 @@ class pyrandaMPI():
                            [self.chunk_3d_lo[0],self.chunk_3d_hi[0]+1 ],
                            [self.chunk_3d_lo[1],self.chunk_3d_hi[1]+1 ])
     
+
+
+
+
+class parcop_der:
+
+    def __init__(self):        
+        pass
+
+    def ddx(self,val):        
+        patch = 0
+        level = 0
+        return parcop.parcop.ddx( patch, level , val )
+
+    def ddy(self,val):        
+        patch = 0
+        level = 0
+        return parcop.parcop.ddy( patch, level , val )
+
+    def ddz(self,val):        
+        patch = 0
+        level = 0
+        return parcop.parcop.ddz( patch, level , val )
+
+    def laplacian(self,val):        
+        patch = 0
+        level = 0
+        return parcop.parcop.plaplacian( patch, level , val )
+
+    def ring(self,val):
+        patch = 0
+        level = 0
+        return parcop.parcop.pring( patch, level , val )
+
+class parcop_gfil:
+
+    def __init__(self):
+        pass
+
+    def filter(self,val):
+        patch = 0
+        level = 0        
+        return parcop.parcop.gfilter( patch, level, val)
+
+class parcop_sfil:
+
+    def __init__(self):
+        pass
+
+    def filter(self,val):
+        patch = 0
+        level = 0        
+        return parcop.parcop.sfilter( patch, level, val)

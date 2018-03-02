@@ -3,11 +3,11 @@ import numpy
 import re
 import sys
 import time
-sys.path.append('/Users/olson45/Research/FloATPy')
+#sys.path.append('/Users/olson45/Research/FloATPy')
 
-from floatpy.parallel import t3dmod
-from floatpy.derivatives.compact import CompactDerivative
-from floatpy.filters.filter import Filter
+#from floatpy.parallel import t3dmod
+#from floatpy.derivatives.compact import CompactDerivative
+#from floatpy.filters.filter import Filter
 
 import matplotlib.pyplot as plt
 
@@ -46,7 +46,8 @@ class pyrandaSim:
                 dz = (meshOptions['xn'][2]-meshOptions['x1'][2])/max(nz-1,1)
                 periodic = meshOptions['periodic']
 
-                self.PyMPI = pyrandaMPI(nx,ny,nz,dx,dy,dz,periodic)
+                #self.PyMPI = pyrandaMPI(nx,ny,nz,dx,dy,dz,periodic)
+                self.PyMPI = pyrandaMPI( meshOptions )
 
             except:
                 raise ValueError("Invalid options given for cartesian mesh")
@@ -227,34 +228,45 @@ class pyrandaSim:
     def ddx(self,val):
         if self.nx <= 1:
             return 0.0
-        dfdx = self.emptyScalar()
-        try:
-            self.PyMPI.der.ddx( val, dfdx )
-        except:
-            import pdb
-            pdb.set_trace()
-
-        return dfdx
+        if 1:
+            return self.PyMPI.der.ddx( val )
+        else:
+            dfdx = self.emptyScalar()
+            try:
+                self.PyMPI.der.ddx( val, dfdx )
+            except:
+                import pdb
+                pdb.set_trace()
+            return dfdx
 
     def ddy(self,val):
         if self.ny <= 1:
             return 0.0
-        dfdy = self.emptyScalar()
-        self.PyMPI.der.ddy( val, dfdy )
-        return dfdy
+        if 1:
+            return self.PyMPI.der.ddy( val )
+        else:
+            dfdy = self.emptyScalar()
+            self.PyMPI.der.ddy( val, dfdy )
+            return dfdy
 
     def ddz(self,val):
         if self.nz <= 1:
             return 0.0
-        dfdz = self.emptyScalar()
-        self.PyMPI.der.ddz( val, dfdz )
-        return dfdz
+        if 1:
+            return self.PyMPI.der.ddz( val )
+        else:
+            dfdz = self.emptyScalar()
+            self.PyMPI.der.ddz( val, dfdz )
+            return dfdz
     
     def grad(self,val):
         return [self.ddx(val),self.ddy(val),self.ddz(val)]
 
     def laplacian(self,val):
         return self.PyMPI.der.laplacian( val )
+
+    def ring(self,val):
+        return self.PyMPI.der.ring( val )
 
     def filterx(self,val):
         f_tilde = self.emptyScalar()
@@ -271,7 +283,11 @@ class pyrandaSim:
         self.PyMPI.fil.filter_z(val, f_tilde)
         return f_tilde 
 
+
     def filter(self,val):
+        return self.PyMPI.fil.filter(val)
+
+    def filterOld(self,val):
         if self.nx > 1:
             f1 = self.filterx(val)
         else:
@@ -302,6 +318,9 @@ class pyrandaSim:
         return f_tilde 
 
     def gfilter(self,val):
+        return self.PyMPI.gfil.filter(val)
+    
+    def gfilterOld(self,val):
         if self.nx > 1:
             f1 = self.gfilterx(val)
         else:
@@ -378,6 +397,7 @@ class pyrandaSim:
         sMap['grad('] = 'self.grad('
         sMap['simtime'] = 'self.time'
         sMap['lap(' ] = 'self.laplacian('
+        sMap['ring(' ] = 'self.ring('
         sMap['sum(' ] = 'self.PyMPI.sum3D('
         sMap['sign(' ] = 'numpy.sign('
         sMap['dot(' ] = 'numpy.dot('
