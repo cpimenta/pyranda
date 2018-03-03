@@ -1,16 +1,34 @@
-import numpy 
-import re
 import sys
 import time
+import numpy 
 import matplotlib.pyplot as plt
 from matplotlib import cm
-from pyranda.pyranda import pyrandaSim
-from pyranda.pyrandaIBM import pyrandaIBM
-from pyranda.pyrandaBC  import pyrandaBC
-from pyranda.pyrandaTimestep  import pyrandaTimestep
+
+from pyranda import pyrandaSim
+from pyrandaIBM import pyrandaIBM
+from pyrandaBC  import pyrandaBC
+from pyrandaTimestep  import pyrandaTimestep
+
+
+# Try to get args for testing
+try:
+    Npts = int(sys.argv[1])
+except:
+    Npts = 64
+
+try:
+    test = bool(int(sys.argv[2]))
+except:
+    test = False
+
+try:
+    testName = (sys.argv[3])
+except:
+    testName = None
+
 
 ## Define a mesh
-Npts = 128
+#Npts = 32
 L = numpy.pi * 2.0  
 dim = 2
 gamma = 1.4
@@ -67,7 +85,7 @@ ddt(:Et:)   =  -ddx( (:Et: + :p: - :tau:)*:u: - :tx:*:kappa:) - ddy( (:Et: + :p:
 :T:         = :p: / :rho: 
 # Artificial bulk viscosity (old school way)
 :div:       =  ddx(:u:) + ddy(:v:)
-:beta:      =  gbar(abs(lap(lap(:div:)))*:dx6: * :rho: * 1.5)
+:beta:      =  gbar(abs(ring(:div:)))*:dx2: * :rho: * 1.0
 :tau:       =  :beta:*:div:
 [:tx:,:ty:,:tz:] = grad(:T:)
 :kappa:     = gbar(abs(lap(lap(:T:))) * :dx6:**(5./6.) * :rho: * :cs: ) * 0.0
@@ -127,7 +145,7 @@ x = ss.mesh.coords[0]
 y = ss.mesh.coords[1]
 z = ss.mesh.coords[2]
 dx = (x[1,0,0] - x[0,0,0])
-ss.variables['dx6'].data += dx**6
+ss.variables['dx2'].data += dx**2
 
 
 # Write a time loop
@@ -135,7 +153,7 @@ time = 0.0
 viz = True
 
 # Approx a max dt and stopping time
-tt = 5.0 #
+tt = 1.5 #
 
 # Mesh for viz on master
 xx   =  ss.PyMPI.zbar( x )
@@ -148,7 +166,7 @@ pvar = 'p'
 
 #import pdb
 #pdb.set_trace()
-CFL = 0.25
+CFL = 0.125
 dt = ss.variables['dt'].data * CFL
 
 while tt > time:
@@ -162,7 +180,7 @@ while tt > time:
     # Print some output
     ss.iprint("%s -- %s" % (cnt,time)  )
     cnt += 1
-    if viz:
+    if viz and (not test):
         v = ss.PyMPI.zbar( ss.variables[pvar].data )
         phi = ss.PyMPI.zbar( ss.variables['phi'].data )
         if (ss.PyMPI.master) and (cnt%viz_freq == 1) :#or True:
@@ -185,3 +203,12 @@ while tt > time:
 
 
 
+# Curve test.  Write file and print its name at the end
+if test:
+    v = ss.PyMPI.zbar( ss.variables[pvar].data )
+    ny = ss.PyMPI.ny
+    v1d =  v[:,ny/2]
+    x1d = xx[:,ny/2]
+    fname = testName + '.dat'
+    numpy.savetxt( fname  , (x1d,v1d) )
+    print fname

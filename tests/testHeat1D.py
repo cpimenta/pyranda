@@ -3,8 +3,8 @@ baselines = """
 heat1D-analytic-16 -- 0.0
 heat1D-analytic-32 -- 0.0
 heat1D-analytic-64 -- 0.0
-heat1D-analytic-128 -- 4.4408920985e-16
-heat1D-analytic-256 -- 3.10862446895e-15
+heat1D-analytic-128 -- 0.0
+heat1D-analytic-256 -- 2.44249065418e-15
 """
 
 # Update dictionary of baseline scalars

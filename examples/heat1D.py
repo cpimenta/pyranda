@@ -1,12 +1,11 @@
-#from mpi4py import MPI
-import numpy 
-import re
 import sys
 import time
+import numpy 
 import matplotlib.pyplot as plt
-from pyranda.pyranda import pyrandaSim
-from pyranda.pyrandaIBM import pyrandaIBM
-from pyranda.pyrandaBC  import pyrandaBC
+
+from pyranda import pyrandaSim
+from pyrandaIBM import pyrandaIBM
+from pyrandaBC  import pyrandaBC
 
 # Try to get args
 try:

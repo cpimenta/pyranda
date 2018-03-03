@@ -1,17 +1,13 @@
-import numpy 
 import re
 import sys
 import time
+import numpy 
 import matplotlib.pyplot as plt
 from matplotlib import cm
 
-sys.path.append('../')
-sys.path.append('../../python_tools/compact-light')
-sys.path.append('../../python_tools/compac-light/mpi4py/install/lib/python2.7/site-packages')
-
-from pyranda.pyranda import pyrandaSim
-from pyranda.pyrandaIBM import pyrandaIBM
-from pyranda.pyrandaBC  import pyrandaBC
+from pyranda import pyrandaSim
+from pyrandaIBM import pyrandaIBM
+from pyrandaBC  import pyrandaBC
 
 
 
@@ -77,7 +73,6 @@ ddt(:Et:)   =  -ddx( (:Et: + :p: - :tau:)*:u: ) - ddy( (:Et: + :p: - :tau:)*:v: 
 :p:         =  ( :Et: - .5*:rho:*(:u:*:u: + :v:*:v:) ) * ( :gamma: - 1.0 )
 # Artificial bulk viscosity (old school way)
 :div:       =  ddx(:u:) + ddy(:v:)
-#:beta:      =  gbar(abs(lap(lap(:div:))))*:dx6: * :rho: * 0.20
 :beta:      =  gbar(abs(ring(:div:)))*:dx2: * :rho: * 1.0
 :tau:       =  :beta:*:div:
 """

@@ -8,7 +8,7 @@ from testObj import *
 test_dir = os.path.dirname(os.path.abspath(__file__))
 bin_dir  = os.path.join( test_dir, '../bin')
 root_dir = os.path.join( test_dir, '..')
-pyranda_exe = os.path.join( bin_dir, 'pyranda')
+pyranda_exe = '/opt/local/bin/python2.7' #os.path.join( bin_dir, 'pyranda')
 pyranda_mpi = os.path.join( bin_dir, 'pympirun')
 
 
@@ -20,6 +20,7 @@ dbase = {}    # Dictionary of baselines
 execfile('test1DAdvection.py')
 execfile('testMM_simple.py')
 execfile('test2deuler.py')
+execfile('testCylinder.py')
 execfile('testHeat1D.py')
 
 

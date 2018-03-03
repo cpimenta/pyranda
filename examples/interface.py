@@ -1,12 +1,10 @@
-import numpy 
-import re
 import sys
 import time
+import numpy 
 import matplotlib.pyplot as plt
 
-from pyranda.pyranda import pyrandaSim
-
-from pyranda.pyrandaIBM import pyrandaIBM
+from pyranda import pyrandaSim
+from pyrandaIBM import pyrandaIBM
 
 
 # Try to get args

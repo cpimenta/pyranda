@@ -1,6 +1,6 @@
 # Copy and paste baselines here
 baselines = """
-MM-adv1d-50-d -- -31.046591364
+MM-adv1d-50-d -- -30.6887885339
 MM-adv1d-100-d -- -0.816951930754
 MM-adv1d-200-d -- 0.996534886127
 MM-adv1d-50 -- 1.0

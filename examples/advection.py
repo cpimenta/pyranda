@@ -1,18 +1,9 @@
-#from mpi4py import MPI
-import numpy 
-import re
 import sys
 import time
-#sys.path.append('/Users/olson45/Research/FloATPy')
-sys.path.append('../')
-sys.path.append('../../python_tools/compact-light')
-
-
+import numpy 
 import matplotlib.pyplot as plt
-from pyranda.pyranda import pyrandaSim
 
-from pyranda.pyrandaIBM import pyrandaIBM
-
+from pyranda import pyrandaSim
 
 # Try to get args
 try:
