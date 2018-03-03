@@ -6,7 +6,6 @@ import time
 #sys.path.append('/Users/olson45/Research/FloATPy')
 sys.path.append('../')
 sys.path.append('../../python_tools/compact-light')
-sys.path.append('../../python_tools/compac-light/mpi4py/install/lib/python2.7/site-packages')
 
 
 import matplotlib.pyplot as plt
