@@ -20,19 +20,14 @@ except:
 L = numpy.pi * 2.0  
 Lp = L * (Npts-1.0) / Npts
 
-
-mesh_options = {}
-mesh_options['type'] = 'cartesian'
-mesh_options['periodic'] = numpy.array([True, True, True])
-mesh_options['dim'] = 1
-mesh_options['x1'] = [ 0.0 , 0.0  ,  0.0 ]
-mesh_options['xn'] = [ Lp   , Lp    ,  Lp ]
-mesh_options['nn'] = [ Npts, 1 ,  1  ]
+imesh = """
+Lp = %s
+Npts = %d
+xdom = (0.0, Lp,  Npts, periodic=True)
+""" % ( Lp, Npts)
 
 # Initialize a simulation object on a mesh
-#import pdb
-#pdb.set_trace()
-ss = pyrandaSim('advection',mesh_options)
+ss = pyrandaSim('advection',imesh)
 
 # Define the equations of motion
 ss.EOM(" ddt(:phi:)  =  -:c: * ddx(:phi:) ")

@@ -1,22 +1,55 @@
 import numpy 
+from pyrandaUtils import *
 
 
 class pyrandaMesh:
 
-    def __init__(self,mesh_options,pympi):
+    def __init__(self):#,mesh_options):
 
         self.name = 'base'
-        self.kind = mesh_options['type']
-        self.options = mesh_options
-        self.dims = mesh_options['dim']
-        self.PyMPI = pympi
+        self.kind = None #mesh_options['type']
+        self.options = {} #None #mesh_options
+        self.dims = 0 #mesh_options['dim']
+        self.PyMPI = None
         self.x = None
         self.y = None
         self.z = None
         self.coords = None
         self.shape = None
-        self.makeMesh()
+        #self.makeMesh()
+
+    def makeMeshStr(self,str_mesh):
+
+        mesh_options = {}
+        meshStrLines = splitLines( str_mesh ) # Split into lines
+
         
+        self.options['x1'] = [ 0.0 , 0.0  ,  0.0 ]
+        self.options['xn'] = [ 1   , 1    ,  1   ]
+        self.options['nn'] = [ 1   , 1    ,  1   ]
+        self.options['type'] = 'cartesian'
+        self.options['periodic'] = numpy.array([True, True, True])
+        self.options['dim'] = 1
+        
+        self.get_sMap()
+
+        for msl in meshStrLines:
+            exec( fortran3d(msl,self.sMap) )
+        
+        
+    def set_options(self,ind,x1,xn,nn,periodic=False):
+
+        self.options['x1'][ind] = x1
+        self.options['xn'][ind] = xn 
+        self.options['nn'][ind] = nn
+        self.options['periodic'][ind] = periodic 
+        
+    def get_sMap(self):
+        sMap = {}
+        sMap['xdom=('] = "self.set_options(0,"
+        sMap['ydom=('] = "self.set_options(1,"
+        sMap['zdom=('] = "self.set_options(2,"
+        self.sMap = sMap
 
     def makeMesh(self):
 

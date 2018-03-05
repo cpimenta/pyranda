@@ -27,6 +27,13 @@ class pyrandaSim:
 
         self.name = name
 
+        self.mesh = pyrandaMesh()
+
+        # Parse shorthand mesh description if string
+        if type(meshOptions) == type(''):
+            self.mesh.makeMeshStr( meshOptions )
+            meshOptions = self.mesh.options
+
         self.meshOptions = meshOptions
 
         if meshOptions.has_key('type'):
@@ -46,16 +53,28 @@ class pyrandaSim:
                 dz = (meshOptions['xn'][2]-meshOptions['x1'][2])/max(nz-1,1)
                 periodic = meshOptions['periodic']
 
-                #self.PyMPI = pyrandaMPI(nx,ny,nz,dx,dy,dz,periodic)
-                self.PyMPI = pyrandaMPI( meshOptions )
-
             except:
                 raise ValueError("Invalid options given for cartesian mesh")
 
         self.nx = nx
         self.ny = ny
         self.nz = nz
-        self.mesh = pyrandaMesh(self.meshOptions,self.PyMPI)
+
+        #self.PyMPI = pyrandaMPI(nx,ny,nz,dx,dy,dz,periodic)
+
+        #self.mesh = pyrandaMesh(self.meshOptions)
+
+        self.PyMPI = pyrandaMPI( meshOptions )
+        self.mesh.options = meshOptions
+        self.mesh.PyMPI = self.PyMPI
+        self.mesh.kind  = meshOptions['type']
+        self.mesh.dims  = meshOptions['dim']
+        self.mesh.makeMesh()
+
+        
+                
+        
+
         
         self.equations = []
         self.conserved = []

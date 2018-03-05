@@ -20,8 +20,20 @@ def fortran3d(form,sMap):
     #
     return form
 
+def splitLines(aLongString):
+    """
+    Take in a long string and split into lines for parsing
+    """
+    ics = aLongString
+    ic_lines = filter(None,ics.split('\n'))
+    ic_lines = [el.replace(' ','') for el in ic_lines ]  # Comments work
+    ic_lines = filter(None,ic_lines)
+    ic_lines = [el for el in ic_lines if el.strip()[0] != '#']  # Comments work
+    return ic_lines
     
-    
+
+
+
 def findVar(string,keyS,unique=True):
     """
     Return a list of the variable names to replace
