@@ -12,8 +12,9 @@ class pyrandaEq:
         self.kind = 'ALG'
         self.active = True
         self.rank = 1
+        self.sRHS = ''
         if '=' in eqstr:
-            self.LHS = findVar(eqstr.split('=')[0],':', unique=False)  # Return values are assumed to all be unique.  Unique to false ensure order is preserved
+            self.LHS = findVar(eqstr.split('=')[0],'scalar', unique=False)  # Return values are assumed to all be unique.  Unique to false ensure order is preserved
             self.rank = len(self.LHS)
         else:
             self.LHS = None   # No return functions
@@ -24,6 +25,7 @@ class pyrandaEq:
             Srhs = fortran3d( self.eqstr.split('=')[1] , sMap)
         else:
             Srhs = fortran3d( self.eqstr , sMap)
+        self.sRHS = Srhs
         self.RHS = eval( 'lambda self: ' + Srhs )
 
         

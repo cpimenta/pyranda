@@ -88,7 +88,7 @@ ddt(:Et:)   =  -ddx( (:Et: + :p: - :tau:)*:u: - :tx:*:kappa:) - ddy( (:Et: + :p:
 :beta:      =  gbar(abs(ring(:div:)))*:dx2: * :rho: * 1.0
 :tau:       =  :beta:*:div:
 [:tx:,:ty:,:tz:] = grad(:T:)
-:kappa:     = gbar(abs(lap(lap(:T:))) * :dx6:**(5./6.) * :rho: * :cs: ) * 0.0
+:kappa:     = gbar(abs(ring(:T:)) * :dx2:**(1./2.) * :rho: * :cs: ) * 0.0
 # Apply constant BCs
 [:u:,:v:,:w:] = ibmV( [:u:,:v:,0.0], :phi:, [:gx:,:gy:,:gz:], [:u1:,:u2:,0.0] )
 :rho: = ibmS( :rho: , :phi:, [:gx:,:gy:,:gz:] )

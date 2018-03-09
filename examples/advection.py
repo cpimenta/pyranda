@@ -20,6 +20,8 @@ except:
 L = numpy.pi * 2.0  
 Lp = L * (Npts-1.0) / Npts
 
+
+# Define the domain/mesh
 imesh = """
 Lp = %s
 Npts = %d
@@ -32,6 +34,11 @@ ss = pyrandaSim('advection',imesh)
 # Define the equations of motion
 ss.EOM(" ddt(:phi:)  =  -:c: * ddx(:phi:) ")
 
+eom = """
+ddt(:phi:)  =  - div( :phi:*:[u]: )
+"""
+#ss.EOM(eom)
+
 # Initialize variables
 ic = """
 rad   = sqrt( (:x:-:pi:)**2  )
@@ -40,6 +47,8 @@ rad   = sqrt( (:x:-:pi:)**2  )
 :c:   = 1.0
 """
 ss.setIC(ic)
+
+#ss.variables["u"].data += 1.0
 
 x  = ss.mesh.coords[0]
 xx =  ss.PyMPI.zbar( x )
@@ -57,6 +66,9 @@ time = 0.0
 viz = True
 while tt > time:
 
+
+    #raw_input('Pause...')
+    
     time = ss.rk4(time,dt)
     dt = min(dt_max, (tt - time) )
 

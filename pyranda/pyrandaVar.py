@@ -15,5 +15,7 @@ class pyrandaVar:
         # Inherit the mesh size
         if self.rank == 'scalar':
             self.data = pympi.emptyScalar()
+        elif self.rank == 'vector':
+            self.data = pympi.emptyVector()
         else:
             raise ValueError('Error: rank: %s not recognized' % self.rank)

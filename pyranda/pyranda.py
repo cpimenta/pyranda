@@ -141,15 +141,23 @@ class pyrandaSim:
         eom_lines = [el for el in eom_lines if el.strip()[0] != '#']  # Comments work
         var_names = []
 
-        #### Get unique set of variables ####
+        #### Get unique set of variables - scalars ####
         for eq in eom_lines:
-            evars = findVar( eq, ':')
+            evars = findVar( eq,'scalar')
             var_names += evars
-
         var_names = list(set(var_names))
-
         for evar in var_names:
             self.addVar(evar,kind='conserved')   # Todo: classify variables
+
+        #### Get unique set of variables - vectors ####
+        var_names = []
+        for eq in eom_lines:
+            evars = findVar( eq,'vector')
+            var_names += evars
+        var_names = list(set(var_names))
+        for evar in var_names:
+            self.addVar(evar,rank='vector',kind='conserved')   
+            
         
         if self.PyMPI.master:
             for variable in self.variables:
@@ -184,7 +192,7 @@ class pyrandaSim:
 
         #### Get unique set of variables ####
         for eq in ic_lines:
-            evars = findVar( eq, ':')
+            evars = findVar( eq,'scalar')
             var_names += evars
 
         var_names = list(set(var_names))
@@ -393,6 +401,8 @@ class pyrandaSim:
         # Get primative flow variables
         #self.updateVars()
         time_i = time
+        #import pdb
+        #pdb.set_trace()
         for ii in range(5):
             #    ii
             FLUX = self.updateFlux()
@@ -408,6 +418,16 @@ class pyrandaSim:
 
     def get_sMap(self):
         sMap = {}
+        
+        sMap["div(#arg#)"] = ""
+        if self.nx > 1:
+            sMap["div(#arg#)"] += "self.ddx(#arg#[:,:,:,0])"
+        if self.ny > 1:
+            sMap["div(#arg#)"] += "+self.ddy(#arg#[:,:,:,1])"
+        if self.nz > 1:
+            sMap["div(#arg#)"] += "+self.ddz(#arg#[:,:,:,2])"
+
+        # Simple find/replace mappings
         sMap['ddx(' ] = 'self.ddx('
         sMap['ddy(' ] = 'self.ddy('
         sMap['ddz(' ] = 'self.ddz('

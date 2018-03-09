@@ -71,8 +71,10 @@ class pyrandaTimestep(pyrandaPackage):
         [dx,dy,dz] = self.getDX()
 
         delta = (dx*dy*dz)**(1./3.)
-        drate = density * delta * delta / numpy.minimum( 1.0e-12, bulk )
+        drate = density * delta * delta / numpy.maximum( 1.0e-12, bulk )
 
+        import pdb
+        pdb.set_trace()
         dt_max = self.pyranda.PyMPI.min3D( drate )
 
         return dt_max
