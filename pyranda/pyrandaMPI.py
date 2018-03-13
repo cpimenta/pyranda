@@ -129,6 +129,11 @@ class pyrandaMPI():
         self.fil  = parcop_sfil()
         self.gfil = parcop_gfil()
 
+
+        self.patch = 0
+        self.level = 0
+        self.setPatch()        
+
         self.master = False
         if self.comm.rank == 0:
             self.master = True
@@ -149,7 +154,9 @@ class pyrandaMPI():
         self.ynproc = False
         if self.ycom.rank == self.ycom.size - 1:
             self.ynproc = True
-
+                                 
+    def setPatch(self):                                 
+        parcop.parcop.set_patch( self.patch, self.level )
 
     def emptyScalar(self):
         return numpy.empty( self.chunk_3d_size, dtype=numpy.float64, order='F')*0.0
@@ -232,29 +239,19 @@ class parcop_der:
         pass
 
     def ddx(self,val):        
-        patch = 0
-        level = 0
-        return parcop.parcop.ddx( patch, level , val )
+        return parcop.parcop.ddx( val )
 
     def ddy(self,val):        
-        patch = 0
-        level = 0
-        return parcop.parcop.ddy( patch, level , val )
+        return parcop.parcop.ddy( val )
 
     def ddz(self,val):        
-        patch = 0
-        level = 0
-        return parcop.parcop.ddz( patch, level , val )
+        return parcop.parcop.ddz(  val )
 
     def laplacian(self,val):        
-        patch = 0
-        level = 0
-        return parcop.parcop.plaplacian( patch, level , val )
+        return parcop.parcop.plaplacian(  val )
 
     def ring(self,val):
-        patch = 0
-        level = 0
-        return parcop.parcop.pring( patch, level , val )
+        return parcop.parcop.pring(  val )
 
 class parcop_gfil:
 
@@ -262,9 +259,7 @@ class parcop_gfil:
         pass
 
     def filter(self,val):
-        patch = 0
-        level = 0        
-        return parcop.parcop.gfilter( patch, level, val)
+        return parcop.parcop.gfilter( val)
 
 class parcop_sfil:
 
@@ -272,6 +267,4 @@ class parcop_sfil:
         pass
 
     def filter(self,val):
-        patch = 0
-        level = 0        
-        return parcop.parcop.sfilter( patch, level, val)
+        return parcop.parcop.sfilter(  val)
