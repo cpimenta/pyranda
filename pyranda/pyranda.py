@@ -92,6 +92,12 @@ class pyrandaSim:
         # Time
         self.time = 0.0
 
+        # Print startup message
+        self.iprint( code() )
+        self.iprint( version() )
+        self.iprint( icopyright() )
+        
+
     def iprint(self,sprnt):
         if self.PyMPI.master:
             print(sprnt)
