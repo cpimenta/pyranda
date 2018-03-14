@@ -63,9 +63,9 @@ ddt(:Et:)   =  -ddx( (:Et: + :p: - :tauxx:)*:u: ) - ddy( (:Et: + :p: - :tauyy:)*
 :wx:        =  ddx(:w:)
 :enst:      = sqrt( (:uy:-:vx:)**2 + (:uz: - :wx:)**2 + (:vz:-:wy:)**2 )
 :tke:       = :rho:*(:u:*:u: + :v:*:v: + :w:*:w:)
-:S:         = sqrt( :ux:*:ux: + :vy:*:vy: + :wz:*:wz: + (:uy:+:vx:)**2 + (:uz: + :wx:)**2 + (:vz:+:wy:)**2 )
-:mu:        =  gbar(abs(ring(:S:  )))*:dx2: * :rho: * 0.0
-:beta:      =  gbar(abs(ring(:div:)))*:dx2: * :rho: * 0.1
+:S:         = sqrt( :ux:*:ux: + :vy:*:vy: + :wz:*:wz: + .5*((:uy:+:vx:)**2 + (:uz: + :wx:)**2 + (:vz:+:wy:)**2) )
+:mu:        =  gbar( ring(:S:  ) ) * :rho: * 1.0e-4
+:beta:      =  gbar( ring(:div:) ) * :rho: * 0.0e-2
 :tauxx:     =  2.0*:mu:*:ux:   + (:beta:-2./3.*:mu:) *:div:
 :tauyy:     =  2.0*:mu:*:vy:   + (:beta:-2./3.*:mu:) *:div:
 :tauzz:     =  2.0*:mu:*:wz:   + (:beta:-2./3.*:mu:) *:div:
@@ -74,7 +74,7 @@ ddt(:Et:)   =  -ddx( (:Et: + :p: - :tauxx:)*:u: ) - ddy( (:Et: + :p: - :tauyy:)*
 :tauyz:     = :mu:*(:vz:+:wz:) + (:beta:-2./3.*:mu:) *:div:
 :cs:  = sqrt( :p: / :rho: * :gamma: )
 :dt: = dt.courant(:u:,:v:,:w:,:cs:)
-:dt: = numpy.minimum(:dt:,0.2 * dt.diff(:beta:,:rho:))
+#:dt: = numpy.minimum(:dt:,0.2 * dt.diff(:beta:,:rho:))
 """
 
 # Add the EOM to the solver
@@ -88,10 +88,10 @@ u0 = 1.0
 p0 = 1.0
 rho0 = 1.0
 L = 1.0
-:u: =  u0*sin(:x:/L)*cos(:y:/L)*cos(:z:/L)
-:v: = -u0*cos(:x:/L)*sin(:y:/L)*cos(:z:/L)
-:w: *= 0.0
-:p: = p0 + rho0/16.0*( cos(2.*:x:/L) + cos(2.*:y:/L))*(cos(2.*:z:/L) + 2.0)
+:u: +=  u0*sin(:x:/L)*cos(:y:/L)*cos(:z:/L)
+:v: += -u0*cos(:x:/L)*sin(:y:/L)*cos(:z:/L)
+:w: += 0.0
+:p: += p0 #+ rho0/16.0*( cos(2.*:x:/L) + cos(2.*:y:/L))*(cos(2.*:z:/L) + 2.0)
 :rho: += rho0
 :rhou: = :rho:*:u:
 :rhov: = :rho:*:v:
@@ -110,8 +110,6 @@ ss.setIC(ic)
 x = ss.mesh.coords[0]
 y = ss.mesh.coords[1]
 z = ss.mesh.coords[2]
-
-ss.variables['dx2'].data += (x[1,0,0] - x[0,0,0])**2
 
 
 # Write a time loop
@@ -134,8 +132,8 @@ dt = ss.variables['dt'].data * CFL
 
 # Viz
 cnt = 1
-viz_freq = 20
-pvar = 'enst'
+viz_freq = 1000
+pvar = 'u'
 
 tke0 = ss.variables['tke'].data.sum()
 

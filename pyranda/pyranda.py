@@ -449,6 +449,7 @@ class pyrandaSim:
         sMap['abs(' ] = 'numpy.abs('
         sMap['sqrt(' ] = 'numpy.sqrt('
         sMap['sin('] = 'numpy.sin('
+        sMap['cos('] = 'numpy.cos('
         sMap['tanh('] = 'numpy.tanh('
         sMap['exp('] = 'numpy.exp(' 
         sMap['where('] = 'numpy.where('
