@@ -184,6 +184,24 @@ class pyrandaSim:
         # Set up the variables in memory
         self.allocate()
             
+    def checkForNan(self,names=[]):
+
+        nans = False
+        svars = ''
+        if not names:
+            names = self.variables
+        for ivar in names:
+            try:
+                myvar = self.variables[ivar]
+                if numpy.isnan(myvar.data).any():
+                    nans = True
+                    svars += ivar + ' '
+            except:
+                print "%s is not a variable"
+                #import pdb
+                #pdb.set_trace()
+        return svars
+
     def setIC(self,ics):
         """
         Evaluate the initial conditions and then update variables
@@ -210,7 +228,19 @@ class pyrandaSim:
             ic_mod = ic #+ '+self.emptyScalar()'
             exec(fortran3d(ic_mod,self.sMap))                           
         
-        #self.updateVars()
+
+        # Check for nans here
+        snans = self.checkForNan( var_names )
+        if snans:
+            self.iprint("Found some nans in inits: %s" % snans)
+            exit()
+
+        self.updateVars()
+        snans = self.checkForNan()
+        if snans:
+            self.iprint("Found some nans in Update after init: %s" % snans)
+            exit()
+
 
         
     def emptyScalar(self):
@@ -456,9 +486,9 @@ class pyrandaSim:
         sMap['3d()'] = 'self.emptyScalar()'
         sMap[':pi:'] = 'numpy.pi'
         
-        sMap[':x:']   = 'self.mesh.coords[0]'
-        sMap[':y:']   = 'self.mesh.coords[1]'
-        sMap[':z:']   = 'self.mesh.coords[2]'
+        sMap['meshx']   = 'self.mesh.coords[0]'
+        sMap['meshy']   = 'self.mesh.coords[1]'
+        sMap['meshz']   = 'self.mesh.coords[2]'
         self.sMap = sMap
         
 
