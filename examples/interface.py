@@ -175,8 +175,8 @@ while tt > time:
             plt.figure(1)
             plt.clf()
             plt.plot(xx[:,0],v2[:,0] ,'k.-')
-            plt.plot(xx[:,0],v[:,0] ,'r.-')
-            plt.plot(xx[:,0],vA[:,0] ,'b.-')
+            #plt.plot(xx[:,0],v[:,0] ,'r.-')
+            #plt.plot(xx[:,0],vA[:,0] ,'b.-')
             plt.pause(.001)
             if twoD:
                 plt.figure(2)

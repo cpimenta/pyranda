@@ -197,7 +197,7 @@ class pyrandaSim:
                     nans = True
                     svars += ivar + ' '
             except:
-                print "%s is not a variable"
+                print "%s is not a variable" % ivar
                 #import pdb
                 #pdb.set_trace()
         return svars

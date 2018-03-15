@@ -50,8 +50,8 @@ ss.EOM(eom)
 
 # Initialize variables
 ic = """
-xnn = :x:[-1,0,0]
-:phi: = 1.0 + 1.0*(xnn - :x:)/xnn
+xnn = meshx[-1,0,0]
+:phi: = 1.0 + 1.0*(xnn - meshx)/xnn
 :c:   = 1.0
 """
 ss.setIC(ic)

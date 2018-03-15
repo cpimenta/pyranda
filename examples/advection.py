@@ -12,7 +12,7 @@ except:
     Npts = 100
 
 try:
-    test = bool(sys.argv[2])
+    test = bool(int(sys.argv[2]))
 except:
     test = False
 
@@ -41,7 +41,7 @@ ddt(:phi:)  =  - div( :phi:*:[u]: )
 
 # Initialize variables
 ic = """
-rad   = sqrt( (:x:-:pi:)**2  )
+rad   = sqrt( (meshx-:pi:)**2  )
 :phi: = 1.0 + 0.1 * exp( -(rad/(:pi:/4.0))**2 )
 :phi2: = :phi:*1.0
 :c:   = 1.0

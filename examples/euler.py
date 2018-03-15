@@ -94,9 +94,9 @@ ss.EOM(eom)
 
 
 # Initialize variables
-ic = "rad = sqrt( (:x:-numpy.pi)**2  ) "
+ic = "rad = sqrt( (meshx-numpy.pi)**2  ) "
 if dim == 2:
-    ic = "rad = sqrt( (:x:-numpy.pi)**2  +  (:y:-numpy.pi)**2 ) "
+    ic = "rad = sqrt( (meshx-numpy.pi)**2  +  (meshy-numpy.pi)**2 ) "
 
 # Linear wave propagation in 1d and 2d
 if (problem == 'linear'):
@@ -112,7 +112,7 @@ if (problem == 'linear'):
 if (problem == 'sod'):
     pvar = 'rho'
     if dim == 1:
-        ic = 'rad = :x: / 2.0'
+        ic = 'rad = meshx / 2.0'
     ic += """
     :gamma: = 1.4
     :Et:  = gbar( where( rad < :pi:/2.0, 1.0/(:gamma:-1.0) , .1 /(:gamma:-1.0) ) )

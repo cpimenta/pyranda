@@ -132,7 +132,7 @@ dt = ss.variables['dt'].data * CFL
 
 # Viz
 cnt = 1
-viz_freq = 1000
+viz_freq = 50
 pvar = 'u'
 
 tke0 = ss.variables['tke'].data.sum()

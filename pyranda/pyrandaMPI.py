@@ -159,11 +159,11 @@ class pyrandaMPI():
         parcop.parcop.set_patch( self.patch, self.level )
 
     def emptyScalar(self):
-        return numpy.empty( self.chunk_3d_size, dtype=numpy.float64, order='F')*0.0
+        return numpy.zeros( self.chunk_3d_size, dtype=numpy.float64, order='F')*0.0
 
     def emptyVector(self):
         blk_size = numpy.append(self.chunk_3d_size,3)
-        return numpy.empty( blk_size, dtype=numpy.float64, order='F')*0.0
+        return numpy.zeros( blk_size, dtype=numpy.float64, order='F')*0.0
 
     
     def gather2D(self,idata,com,n1,n2,g1,g2):

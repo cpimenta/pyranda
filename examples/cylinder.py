@@ -117,10 +117,10 @@ ss.EOM(eom)
 # Initialize variables
 ic = """
 :gamma: = 1.4
-rad = sqrt( (:x:-numpy.pi)**2  +  (:y:-numpy.pi)**2 ) 
+rad = sqrt( (meshx-numpy.pi)**2  +  (meshy-numpy.pi)**2 ) 
 :phi: = rad - numpy.pi/4.0
 :rho: = 1.0 + 3d()
-:p:  =  1.0 + 3d() #exp( -(:x:-1.5)**2/.25**2)*.1
+:p:  =  1.0 + 3d() #exp( -(meshx-1.5)**2/.25**2)*.1
 :u: = where( :phi:>0.5, mach * sqrt( :p: / :rho: * :gamma:) , 0.0 )
 #:u: = mach * sqrt( :p: / :rho: * :gamma:)
 :u: = gbar( gbar( :u: ) )

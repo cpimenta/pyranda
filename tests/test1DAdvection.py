@@ -12,27 +12,27 @@ dbase.update( baseDict( baselines) )
 
 test = testObj('advec-1d-50')
 test.script = 'examples/advection.py'
-test.args = ['50','0']
+test.args = ['50','1']
 tests.append( test )
 
 test = testObj('advec-1d-100')
 test.script = 'examples/advection.py'
-test.args = ['100','0']
+test.args = ['100','1']
 tests.append( test )
 
 test = testObj('advec-1d-200')
 test.script = 'examples/advection.py'
-test.args = ['200','0']
+test.args = ['200','1']
 tests.append( test )
 
 test = testObj('advec-1d-300')
 test.script = 'examples/advection.py'
-test.args = ['300','0']
+test.args = ['300','1']
 tests.append( test )
 
 test = testObj('advec-1d-400')
 test.script = 'examples/advection.py'
-test.args = ['400','0']
+test.args = ['400','1']
 tests.append( test )
 
 
