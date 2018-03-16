@@ -85,7 +85,7 @@ ddt(:Et:)   =  -ddx( (:Et: + :p: - :tau:)*:u: - :tx:*:kappa:) - ddy( (:Et: + :p:
 :T:         = :p: / :rho: 
 # Artificial bulk viscosity (old school way)
 :div:       =  ddx(:u:) + ddy(:v:)
-:beta:      =  gbar(abs(ring(:div:)))*:dx2: * :rho: * 1.0
+:beta:      =  gbar(abs(ring(:div:))) * :rho: * 7.0e-2
 :tau:       =  :beta:*:div:
 [:tx:,:ty:,:tz:] = grad(:T:)
 :kappa:     = gbar(abs(ring(:T:)) * :dx2:**(1./2.) * :rho: * :cs: ) * 0.0

@@ -19,10 +19,10 @@ problem = 'TGvortex'
 ## Define a mesh
 Npts = 32
 imesh = """
-xdom = (0.0, 2*pi,  Npts, periodic=True)
-ydom = (0.0, 2*pi,  Npts, periodic=True)
-zdom = (0.0, 2*pi,  Npts, periodic=True)
-""".replace('Npts',str(Npts)).replace('pi',str(numpy.pi))
+xdom = (0.0, 2*pi*FF,  Npts, periodic=True)
+ydom = (0.0, 2*pi*FF,  Npts, periodic=True)
+zdom = (0.0, 2*pi*FF,  Npts, periodic=True)
+""".replace('Npts',str(Npts)).replace('pi',str(numpy.pi)).replace('FF',str( float(Npts-1)/Npts ) )
 
     
 # Initialize a simulation object on a mesh
@@ -37,7 +37,7 @@ ddt(:rho:)  =  -ddx(:rho:*:u:)                  - ddy(:rho:*:v:)                
 ddt(:rhou:) =  -ddx(:rhou:*:u: + :p: - :tauxx:) - ddy(:rhou:*:v: - :tauxy:)       - ddz(:rhou:*:v: - :tauxz:)
 ddt(:rhov:) =  -ddx(:rhov:*:u: + :tauxy:)       - ddy(:rhov:*:v: + :p: - :tauyy:) - ddz(:rhov:*:w: - :tauyz:)
 ddt(:rhow:) =  -ddx(:rhow:*:u: + :tauxz:)       - ddy(:rhow:*:v: + :tauyz:)       - ddz(:rhow:*:w: + :p: - :tauzz:)
-ddt(:Et:)   =  -ddx( (:Et: + :p: - :tauxx:)*:u: ) - ddy( (:Et: + :p: - :tauyy:)*:v: ) - ddz( (:Et: + :p: - :tauzz:)*:w: )
+ddt(:Et:)   =  -ddx( (:Et: + :p: - :tauxx:)*:u: - :tauxy:*:v: - :tauxz:*:w: ) - ddy( (:Et: + :p: - :tauyy:)*:v: -:tauxy:*:u: - :tauyz:*:w:) - ddz( (:Et: + :p: - :tauzz:)*:w: - :tauxz:*:u: - :tauyz:*:v: )
 # Conservative filter of the EoM
 :rho:       =  fbar( :rho:  )
 :rhou:      =  fbar( :rhou: )
@@ -64,8 +64,8 @@ ddt(:Et:)   =  -ddx( (:Et: + :p: - :tauxx:)*:u: ) - ddy( (:Et: + :p: - :tauyy:)*
 :enst:      = sqrt( (:uy:-:vx:)**2 + (:uz: - :wx:)**2 + (:vz:-:wy:)**2 )
 :tke:       = :rho:*(:u:*:u: + :v:*:v: + :w:*:w:)
 :S:         = sqrt( :ux:*:ux: + :vy:*:vy: + :wz:*:wz: + .5*((:uy:+:vx:)**2 + (:uz: + :wx:)**2 + (:vz:+:wy:)**2) )
-:mu:        =  gbar( ring(:S:  ) ) * :rho: * 1.0e-4
-:beta:      =  gbar( ring(:div:) ) * :rho: * 0.0e-2
+:mu:        =  gbar( abs(ring(:S:  )) ) * :rho: * 1.0e-4
+:beta:      =  gbar( abs(ring(:div:)) ) * :rho: * 7.0e-2
 :tauxx:     =  2.0*:mu:*:ux:   + (:beta:-2./3.*:mu:) *:div:
 :tauyy:     =  2.0*:mu:*:vy:   + (:beta:-2./3.*:mu:) *:div:
 :tauzz:     =  2.0*:mu:*:wz:   + (:beta:-2./3.*:mu:) *:div:
@@ -132,7 +132,7 @@ dt = ss.variables['dt'].data * CFL
 
 # Viz
 cnt = 1
-viz_freq = 50
+viz_freq = 10
 pvar = 'u'
 
 tke0 = ss.variables['tke'].data.sum()
@@ -150,7 +150,9 @@ while time < 20.0:
     ss.iprint("%s -- %s --- TKE: %s" % (cnt,time,tke)  )
     cnt += 1
     if viz:
-        v = ss.PyMPI.zbar( ss.variables[pvar].data )
+
+        dd = numpy.where( z == 0.0, 1.0, 0.0 )
+        v = ss.PyMPI.zbar( dd*ss.variables[pvar].data )
         #v = ss.variables[pvar].data[:,:,16]
         if (ss.PyMPI.master and (cnt%viz_freq == 0)) and True:
             plt.figure(2)
