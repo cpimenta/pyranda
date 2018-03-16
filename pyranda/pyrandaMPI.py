@@ -3,19 +3,13 @@ import numpy
 import re
 import sys
 import time
+from functools import reduce
 
-
-#sys.path.append('/Users/olson45/Research/FloATPy')
-#from floatpy.parallel import t3dmod
-#from floatpy.derivatives.compact import CompactDerivative
-#from floatpy.filters.filter import Filter                
-            
 import parcop
 
 
 class pyrandaMPI():
 
-    #def __init__(self,nx,ny,nz,dx,dy,dz,periodic):
     def __init__(self,meshOptions):
 
         self.nx = meshOptions['nn'][0]
@@ -46,9 +40,18 @@ class pyrandaMPI():
         self.order = (10,10,10)
         self.filter_type = ('compact', 'compact', 'compact')
         
-        px = 1
-        py = 1
-        pz = 1
+
+        # Compute the domain decomposition
+        [px,py,pz] = decomp( self.comm.Get_size(),
+                             self.nx, self.ny, self.nz )
+
+        if (px*py*pz < self.comm.Get_size()):
+            if self.comm.Get_rank() == 0:
+                print 'Error: Processor under-utilization not allowed'
+                exit()
+                
+        
+        
         bx1 = "NONE"
         bxn = "NONE"
         by1 = "NONE"#"PERI"
@@ -268,3 +271,94 @@ class parcop_sfil:
 
     def filter(self,val):
         return parcop.parcop.sfilter(  val)
+
+
+
+
+def factors(n):    
+    ff = set(reduce(list.__add__, 
+                ([i, n//i] for i in range(1, int(pow(n, 0.5) + 1)) if n % i == 0)))
+    return list(ff)
+
+
+class pyDecomp:
+    def __init__(self,xp,yp,zp,np,nx,ny,nz):
+
+        self.xp = xp
+        self.yp = yp
+        self.zp = zp
+        self.nx = nx
+        self.ny = ny
+        self.nz = nz
+        self.np = np
+
+        self.totalProcs = self.xp * self.yp * self.zp
+
+        ax = nx / xp
+        ay = ny / yp
+        az = nz / zp
+
+        surface = 2*ax*ay + 2*ay*az + 2*az*ax
+        volume  = ax*ay*az
+
+        self.surf2vol = float(surface) / float(volume)
+
+        # optimal surface to volume ratio
+        sopt = float(volume)**(2./3.) * 6.0  / float( volume )
+        
+
+        self.score = 1.0
+        
+        # Too many procs
+        if self.totalProcs > self.np:
+            self.score *= 0.0            
+            
+
+        # Too small in any direction
+        if (ax > 1) and (ax < 16):
+            self.score *= 0.0
+
+        if (ay > 1) and (ay < 16):
+            self.score *= 0.0
+
+        if (az > 1) and (az < 16):
+            self.score *= 0.0
+            
+
+        # Total procs (under-utilization penalty
+        #self.score *= self.totalProcs / self.np
+        if self.totalProcs < self.np:
+            self.score *= 0.0
+        
+
+        # Surface/Volume
+        safrac = .1
+        self.score -= safrac*(1.0 - sopt / self.surf2vol  )
+        
+            
+        
+        
+
+def decomp(nprocs,nx,ny,nz):
+    """ 
+    Return the optimal domain decomp for nprocs
+    """
+
+    # Get factors in each direction
+    xfac = factors(nx)
+    yfac = factors(ny)
+    zfac = factors(nz)
+    
+
+    # Get all combos
+    decomps = []
+    for xf in xfac:
+        for yf in yfac:
+            for zf in zfac:
+                xproc = nx / xf
+                yproc = ny / yf
+                zproc = nz / zf
+                decomps.append( pyDecomp( xproc,yproc,zproc,nprocs,nx,ny,nz) )
+                
+    decomps.sort(key=lambda x: x.score, reverse=True)    
+    return [decomps[0].xp,decomps[0].yp,decomps[0].zp]

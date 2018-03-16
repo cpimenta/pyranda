@@ -120,10 +120,10 @@ viz = True
 
 
 # Mesh for viz on master
-#xx   =  ss.PyMPI.zbar( x ) / Npts
-#yy   =  ss.PyMPI.zbar( y ) / Npts
-xx   =   x[:,:,16] / Npts
-yy   =   y[:,:,16] / Npts
+xx   =  ss.PyMPI.zbar( x ) / Npts
+yy   =  ss.PyMPI.zbar( y ) / Npts
+#xx   =   x[:,:,16] / Npts
+#yy   =   y[:,:,16] / Npts
 ny = ss.PyMPI.ny
 
 # Start time loop
@@ -150,8 +150,8 @@ while time < 20.0:
     ss.iprint("%s -- %s --- TKE: %s" % (cnt,time,tke)  )
     cnt += 1
     if viz:
-        #v = ss.PyMPI.zbar( ss.variables[pvar].data )
-        v = ss.variables[pvar].data[:,:,16]
+        v = ss.PyMPI.zbar( ss.variables[pvar].data )
+        #v = ss.variables[pvar].data[:,:,16]
         if (ss.PyMPI.master and (cnt%viz_freq == 0)) and True:
             plt.figure(2)
             plt.clf()            
